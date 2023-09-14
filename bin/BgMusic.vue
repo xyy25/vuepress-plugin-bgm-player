@@ -84,8 +84,10 @@ function rotate () {
     fm.style.transition = '0.1s linear'
   }, 100)
 }
+
 import volume from './mixins/volume.js'
-import ModuleTransition from './ModuleTransition'
+import ModuleTransition from './ModuleTransition.vue'
+
 export default {
   mixins: [volume],
   components: {

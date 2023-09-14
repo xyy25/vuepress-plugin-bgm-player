@@ -1,8 +1,23 @@
-const { resolve } = require('path')
+import { path, getDirname } from "@vuepress/utils";
 
-module.exports = (options, context) => ({
+const __dirname = getDirname(import.meta.url);
+
+/**
+ * @param { import(".").BgPlayerOptions } [options]
+ * @param { any } [context]
+*/
+export default (options, context) => ({
   define () {
-    const { position, audios, autoplay, autoShrink, shrinkMode, floatPosition, floatStyle } = options
+    const {
+      position,
+      audios = [],
+      autoplay,
+      autoShrink,
+      shrinkMode,
+      floatPosition,
+      floatStyle
+    } = options ?? {};
+
     return {
       POSITION: position || {
         left: '10px',
@@ -20,7 +35,8 @@ module.exports = (options, context) => ({
       }
     }
   },
+
   name: '@vuepress-reco/vuepress-plugin-bgm-player',
-  enhanceAppFiles: resolve(__dirname, './bin/enhanceAppFile.js'),
-  globalUIComponents: 'BgMusic'
+  multiple: true,
+  clientConfigFile: path.resolve(__dirname, './bin/clientConfig.js'),
 })
