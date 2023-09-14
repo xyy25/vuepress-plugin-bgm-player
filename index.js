@@ -3,7 +3,8 @@ import { path, getDirname } from "@vuepress/utils";
 const __dirname = getDirname(import.meta.url);
 
 /**
- * @param { import(".").BgPlayerOptions } [options]
+ * @typedef { import(".").Audio } Audio
+ * @param { import(".").BgPlayerOptions & { audios: Audio[] } } options
  * @param { any } [context]
 */
 export default (options, context) => ({
@@ -19,16 +20,19 @@ export default (options, context) => ({
       floatStyle
     } = options ?? {};
 
+    const initPosition =  {
+      ...(position ?? {}),
+      left: position.right ? undefined : position.left ?? '10px',
+      bottom: position.top ? undefined : position.bottom ?? '10px',
+      'z-index': '999999'
+    }
+
     return {
       DEFAULT_COVER: defaultCover || path.resolve(__dirname, "./images/default.jpg"),
-      POSITION: position || {
-        left: '10px',
-        bottom: '10px',
-        'z-index': '999999'
-      },
+      POSITION: initPosition,
       AUDIOS: audios,
-      AUTOPLAY: autoplay || false, // 是否开启自动播放
-      AUTO_SHRINK: autoShrink || false, // 是否默认收缩
+      AUTOPLAY: autoplay || false,
+      AUTO_SHRINK: autoShrink || true,
       SHRINK_MODE: shrinkMode || 'float',
       FLOAT_POSITION: floatPosition || 'left',
       FLOAT_STYLE: floatStyle || {

@@ -1,10 +1,12 @@
 import type { PluginObject } from "@vuepress/core";
 
-export interface PositionOptions {
-  left: string,
-  bottom: string,
+export type PositionOptions = {
   'z-index': string
-}
+} & (
+  ({ left: string } | { right: string })
+  &
+  ({ top: string } | { bottom: string })
+);
 export interface Audio {
   name: string,
   artist: string,

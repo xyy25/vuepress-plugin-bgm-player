@@ -27,7 +27,6 @@
       border-radius 50%
       box-shadow 0 0 10px 1px #616161
       cursor pointer
-      pointer-events none
       .mini-operation
         height 100%
         border-radius 50%
@@ -110,6 +109,8 @@
           font-size 18px
         .mute
           font-size 18px
+        .mute:hover
+          font-size calc(@font-size + 2)
         .volume-bar
           height 5px
           width 57px
@@ -136,8 +137,8 @@
       i
         color var(--accent-color)
   .reco-float-box
-    width 45px
-    height 45px
+    width 50px
+    height 50px
     background-color var(--default-color-7)
     position fixed
     bottom 2em
@@ -157,4 +158,3 @@
 .dark
   .reco-float-box:hover
     box-shadow 0 0 5px rgb(183, 219, 219)
-
