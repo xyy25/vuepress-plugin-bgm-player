@@ -5,7 +5,6 @@ export interface PositionOptions {
   bottom: string,
   'z-index': string
 }
-
 export interface Audio {
   name: string,
   artist: string,
@@ -13,17 +12,22 @@ export interface Audio {
   cover?: string
 }
 
+export type RequiredAudio = Audio | {
+  type: "dir"
+  url: string
+}
+
 export interface BgPlayerOptions {
   defaultCover: string
   position: Partial<PositionOptions>
-  audios: Audio[]
+  audios: RequiredAudio[]
   autoplay: boolean
   autoShrink: boolean
   shrinkMode: "mini" | "float"
   floatPosition: "left" | "right"
-  floatStyle: CSSStyleDeclaration
+  floatStyle: StyleValue
 }
 
-declare const _default: (options: Partial<BgPlayerOptions> & { audios: Audio[] }, context?: any) => PluginObject;
+declare const _default: (options: Partial<BgPlayerOptions> & { audios: RequiredAudio[] }, context?: any) => PluginObject;
 
 export = _default;

@@ -1,34 +1,40 @@
 <template>
   <div class="reco-bgm-panel">
     <!-- 播放器 -->
-    <audio id="bgm" :src="audio[curIndex].url" ref="bgm" @ended="bgmEnded" @canplay="playReady" @timeupdate="timeUpdate"></audio>
+    <audio id="bgm" :src="audiolist[curIndex].url" ref="bgm" @ended="bgmEnded" @canplay="playReady" @timeupdate="timeUpdate"></audio>
     <module-transition :position="floatPosition">
       <div v-show="isFloat" @click="changeBgmInfo(false)" class="reco-float-box" :style="floatStyle">
-        <img :src="audio[curIndex].cover ?? defaultCover">
+        <img :src="audiolist[curIndex].cover ?? defaultCover">
       </div>
     </module-transition>
     <module-transition>
       <div class="reco-bgm-box" v-show="!isFloat" :style="panelPosition">
         <!-- 封面 -->
         <div class="reco-bgm-cover" @click="changeBgmInfo(false)"
-          :style="`background-image:url(${audio[curIndex].cover ?? defaultCover})`">
+          :style="`background-image:url(${audiolist[curIndex].cover ?? defaultCover})`">
           <!-- mini操作栏 -->
-          <div v-show="isMini" class="mini-operation">
-            <i v-show="this.curPlayStatus === 'playing' && isMini" @click.stop="pauseBgm" class="reco-bgm reco-bgm-pause"></i>
-            <i v-show="this.curPlayStatus === 'paused' && isMini" @click.stop="playBgm" class="reco-bgm reco-bgm-play"></i>
+          <div v-if="isMini" class="mini-operation">
+            <i v-if="curPlayStatus === 'playing'" @click.stop="pauseBgm" class="reco-bgm reco-bgm-pause"></i>
+            <i v-else-if="curPlayStatus === 'paused'" @click.stop="playBgm" class="reco-bgm reco-bgm-play"></i>
           </div>
           <!-- 错误信息显示 -->
-          <div v-show="isFault" class="falut-message">
+          <div v-if="isFault" class="falut-message">
             播放失败
           </div>
         </div>
-        <module-transition duration=".15">
+        <!-- <module-transition duration=".15"> -->
           <!-- 歌曲信息栏 -->
-          <div v-show="!isMini" class="reco-bgm-info">
+          <div v-if="!isMini" class="reco-bgm-info">
             <!-- 歌曲名 -->
-            <div class="info-box"><i class="reco-bgm reco-bgm-music music"></i>{{ audio[curIndex].name }}</div>
+            <div class="info-box">
+              <i class="reco-bgm reco-bgm-music music"></i>
+                {{ audiolist[curIndex].name }}
+            </div>
             <!-- 艺术家名 -->
-            <div class="info-box"><i class="reco-bgm reco-bgm-artist"></i>{{ audio[curIndex].artist }}</div>
+            <div class="info-box">
+              <i class="reco-bgm reco-bgm-artist"></i>
+                {{ audiolist[curIndex].artist }}
+            </div>
             <!-- 歌曲进度条 -->
             <div class="reco-bgm-progress">
               <div class="progress-bar" @click="progressJump">
@@ -38,38 +44,39 @@
             <!-- 歌曲操作栏 -->
             <div class="reco-bgm-operation">
               <i class="reco-bgm reco-bgm-last last" @click="playLast"></i>
-              <i v-show="curPlayStatus === 'playing'" @click="pauseBgm" class="reco-bgm reco-bgm-pause pause"></i>
-              <i v-show="curPlayStatus === 'paused'" ref="play" @click="playBgm" class="reco-bgm reco-bgm-play play"></i>
+              <i v-if="curPlayStatus === 'playing'" @click="pauseBgm" class="reco-bgm reco-bgm-pause pause"></i>
+              <i v-else-if="curPlayStatus === 'paused'" ref="play" @click="playBgm" class="reco-bgm reco-bgm-play play"></i>
               <i class="reco-bgm reco-bgm-next next" @click="playNext"></i>
-              <i v-show="!isMute" @click="muteBgm" class="reco-bgm reco-bgm-volume1 volume"></i>
-              <i v-show="isMute" @click="unMuteBgm" class="reco-bgm reco-bgm-mute mute"></i>
+              <i v-if="isMute" @click="unMuteBgm" class="reco-bgm reco-bgm-mute mute"></i>
+              <i v-else @click="muteBgm" class="reco-bgm reco-bgm-volume1 volume"></i>
               <div class="volume-bar" @click="volumeJump">
                 <div class="bar" ref="vbar"></div>
               </div>
             </div>
           </div>
-        </module-transition>
-        <!-- 缩放按钮 -->
-        <module-transition duration=".15">
-          <div v-show="!isMini" @click="changeBgmInfo(true)" class="reco-bgm-left-box">
+        <!-- </module-transition> -->
+        <!-- 收起按钮 -->
+        <!-- <module-transition duration=".15"> -->
+          <div v-if="!isMini" @click="changeBgmInfo(true)" class="reco-bgm-left-box">
             <i class="reco-bgm reco-bgm-left" ></i>
           </div>
-        </module-transition>
+        <!-- </module-transition> -->
       </div>
     </module-transition>
   </div>
 </template>
 
 <script>
-let InterVal
+let InterVal;
 // 歌曲封面的旋转角度
-let rotateVal = 0
+let rotateVal = 0;
 // 歌曲封面的旋转
 function rotate () {
   InterVal = setInterval(function () {
     const cover = document.querySelector('.reco-bgm-cover')
     const btn = document.querySelector('.mini-operation')
     const fm = document.querySelector('.falut-message')
+    if(!cover || !btn || !fm) return;
     rotateVal += 1
     // 设置旋转属性(顺时针)
     cover.style.transform = 'rotate(' + rotateVal + 'deg)'
@@ -83,11 +90,41 @@ function rotate () {
     fm.style.transform = 'rotate(-' + rotateVal + 'deg)'
     // 设置旋转时的动画  匀速0.1s
     fm.style.transition = '0.1s linear'
-  }, 100)
+  }, 100);
 }
 
-import volume from './mixins/volume.js'
-import ModuleTransition from './ModuleTransition.vue'
+import volume from './mixins/volume.js';
+import ModuleTransition from './ModuleTransition.vue';
+
+/**
+ * @param { import("..").RequiredAudio[] } requiredAudio
+ * @return { Audio[] }
+ */
+function resolveAudios(requiredAudio) {
+  let files = null;
+  let covers = null;
+
+  return requiredAudio.map((e) => {
+    if(!("type" in e)) {
+      return e;
+    }
+    if(!files) files = import.meta.glob('../../../public/**/*.mp3', { eager: true });
+    if(!covers) covers = import.meta.glob('../../../public/**/*.png', { eager: true });
+
+    return Object.keys(files).map(m => {
+      const reg = new RegExp(`.*public(${e.url}(.+?)( - (.+))?\\.mp3)`);
+      const match = m.match(reg);
+      const coverUrl = m.replace(".mp3", ".png");
+
+      return {
+        name: match[2],
+        artist: match[4],
+        url: match[1],
+        cover: coverUrl in covers ? coverUrl : DEFAULT_COVER
+      }
+    });
+  }).flat();
+}
 
 export default {
   mixins: [volume],
@@ -119,7 +156,7 @@ export default {
       panelPosition: POSITION,
       curIndex: 0,
       curPlayStatus: 'paused',
-      audio: AUDIOS,
+      audiolist: [],
       autoplay: AUTOPLAY,
       isFloat: false,
       isMini: false,
@@ -131,6 +168,9 @@ export default {
       autoShrink: AUTO_SHRINK,
       shrinkMode: SHRINK_MODE
     }
+  },
+  created() {
+    this.audiolist = resolveAudios(AUDIOS);
   },
   watch: {
     'curPlayStatus': function (newVal) {
@@ -222,7 +262,7 @@ export default {
     playNext () {
       this.$refs.pbar.style.width = 0
       this.isFault = false
-      if (this.curIndex >= this.audio.length - 1) {
+      if (this.curIndex >= this.audiolist.length - 1) {
         this.curIndex = 0
       } else {
         this.curIndex++
@@ -233,7 +273,7 @@ export default {
       this.$refs.pbar.style.width = 0
       this.isFault = false
       if (this.curIndex <= 0) {
-        this.curIndex = this.audio.length - 1
+        this.curIndex = this.audiolist.length - 1
       } else {
         this.curIndex--
       }

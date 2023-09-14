@@ -1,6 +1,6 @@
 <template>
   <transition
-    name="module"
+    name="ModuleTransition"
     @enter="setStyle"
     @after-enter="unsetStyle"
     @before-leave="setStyle">
