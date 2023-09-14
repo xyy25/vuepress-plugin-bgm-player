@@ -4,13 +4,14 @@
     <audio id="bgm" :src="audio[curIndex].url" ref="bgm" @ended="bgmEnded" @canplay="playReady" @timeupdate="timeUpdate"></audio>
     <module-transition :position="floatPosition">
       <div v-show="isFloat" @click="changeBgmInfo(false)" class="reco-float-box" :style="floatStyle">
-        <img :src="audio[curIndex].cover">
+        <img :src="audio[curIndex].cover ?? defaultCover">
       </div>
     </module-transition>
     <module-transition>
       <div class="reco-bgm-box" v-show="!isFloat" :style="panelPosition">
         <!-- 封面 -->
-        <div class="reco-bgm-cover" @click="changeBgmInfo(false)" :style="`background-image:url(${audio[curIndex].cover})`">
+        <div class="reco-bgm-cover" @click="changeBgmInfo(false)"
+          :style="`background-image:url(${audio[curIndex].cover ?? defaultCover})`">
           <!-- mini操作栏 -->
           <div v-show="isMini" class="mini-operation">
             <i v-show="this.curPlayStatus === 'playing' && isMini" @click.stop="pauseBgm" class="reco-bgm reco-bgm-pause"></i>
@@ -114,6 +115,7 @@ export default {
   },
   data () {
     return {
+      defaultCover: DEFAULT_COVER,
       panelPosition: POSITION,
       curIndex: 0,
       curPlayStatus: 'paused',

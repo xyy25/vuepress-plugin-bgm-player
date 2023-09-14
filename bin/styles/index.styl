@@ -1,11 +1,19 @@
+.dark .reco-bgm-panel
+  --box-shadow: 0 0 5px rgba(184, 221, 221, 0.4)
+  --default-color-7: rgba(77, 70, 97, 0.7)
+
+:not(.dark *) .reco-bgm-panel
+  --box-shadow: 0 0 5px rgba(7, 73, 73, 0.4)
+  --default-color-7: rgba(255, 255, 255, 0.7)
+
 .reco-bgm-panel
+  --accent-color rgb(104, 173, 173)
   height 0
   width 0
   .reco-bgm-box
     position fixed
     display flex
     height 80px
-    background-color rgba(255, 255, 255, 0.7)
     background-color var(--default-color-7)
     border-radius 50px
     padding 10px
@@ -14,14 +22,16 @@
       background-size contain
       z-index 3
       float left
-      height 80px
-      width 80px
-      border-radius 40px
+      height 100%
+      width: 60px
+      border-radius 50%
       box-shadow 0 0 10px 1px #616161
+      cursor pointer
+      pointer-events none
       .mini-operation
-        height 80px
-        border-radius 40px
-        width 80px
+        height 100%
+        border-radius 50%
+        width @width
         display flex
         background-color rgba(158, 158, 158, 0.3)
         justify-content center
@@ -31,9 +41,9 @@
           cursor pointer
           font-size 20px
       .falut-message
-        height 80px
-        border-radius 40px
-        width 80px
+        height 100%
+        border-radius 50%
+        width @width
         display flex
         background-color rgba(158, 158, 158, 0.3)
         justify-content center
@@ -42,7 +52,7 @@
     .reco-bgm-info
       float left
       z-index 2
-      height 80px
+      height 100%
       padding 0 10px
       display flex
       flex-direction column
@@ -51,19 +61,21 @@
         height 21px
         display flex
         align-items center
+        font-size 14px
         i
-          color $accentColor
-          font-size 21px
-        .music
+          color var(--accent-color)
           font-size 18px
+        .music
+          font-size 16px
       .reco-bgm-progress
         height 14px
-        width 150px
+        width 100%
         display flex
         align-items center
+        padding 2px 0
         .progress-bar
           height 5px
-          width 150px
+          width 100%
           background #757575
           border-radius 5px
           position relative
@@ -74,7 +86,7 @@
             top 0
             height 5px
             width 0
-            background-color $accentColor
+            background-color var(--accent-color)
             border-radius 5px
       .reco-bgm-operation
         display flex
@@ -83,12 +95,12 @@
         height 24px
         i
           margin-right 5px
-          color $accentColor
+          color var(--accent-color)
           cursor pointer
         .last
-          font-size 14px
+          font-size 10px
         .next
-          font-size 14px
+          font-size 10px
         .pause
           font-size 15px
         .play
@@ -110,30 +122,38 @@
             top 0
             height 5px
             width 0
-            background-color $accentColor
+            background-color var(--accent-color)
             border-radius 5px
     .reco-bgm-left-box
       float left
-      height 80px
+      height 100%
       font-size 22px
       display flex
       flex-direction column
       justify-content center
       cursor pointer
       i
-        color $accentColor
+        color var(--accent-color)
   .reco-float-box
-    width 40px
-    height 40px
-    background-color $accentColor
+    width 45px
+    height 45px
+    background-color var(--default-color-7)
     position fixed
-    bottom 200px
+    bottom 2em
     display flex
     justify-content center
     align-items center
     cursor pointer
     box-shadow var(--box-shadow)
     img
-      width 30px
-      height 30px
+      width 45px
+      height 45px
       border-radius 50%
+      pointer-events none
+  .reco-float-box:hover
+    box-shadow 0 0 5px rgb(7, 73, 73)
+
+.dark
+  .reco-float-box:hover
+    box-shadow 0 0 5px rgb(183, 219, 219)
+

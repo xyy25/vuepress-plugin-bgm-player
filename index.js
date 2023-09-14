@@ -9,8 +9,9 @@ const __dirname = getDirname(import.meta.url);
 export default (options, context) => ({
   define () {
     const {
+      defaultCover,
       position,
-      audios = [],
+      audios,
       autoplay,
       autoShrink,
       shrinkMode,
@@ -19,6 +20,7 @@ export default (options, context) => ({
     } = options ?? {};
 
     return {
+      DEFAULT_COVER: defaultCover || path.resolve(__dirname, "./images/default.jpg"),
       POSITION: position || {
         left: '10px',
         bottom: '10px',

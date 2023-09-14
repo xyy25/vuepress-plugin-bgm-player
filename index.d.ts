@@ -10,10 +10,11 @@ export interface Audio {
   name: string,
   artist: string,
   url: string,
-  cover: string
+  cover?: string
 }
 
 export interface BgPlayerOptions {
+  defaultCover: string
   position: Partial<PositionOptions>
   audios: Audio[]
   autoplay: boolean
@@ -23,6 +24,6 @@ export interface BgPlayerOptions {
   floatStyle: CSSStyleDeclaration
 }
 
-declare const _default: (options?: Partial<BgPlayerOptions>, context?: any) => PluginObject;
+declare const _default: (options: Partial<BgPlayerOptions> & { audios: Audio[] }, context?: any) => PluginObject;
 
 export = _default;
