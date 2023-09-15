@@ -8,7 +8,7 @@
         <img :class="rotate" :src="audiolist[curIndex].cover ?? defaultCover">
       </div>
     </module-transition>
-    <module-transition>
+    <module-transition :position="align.x">
       <div ref="bgmBox" class="reco-bgm-box" v-show="!isFloat" :style="panelPos"
         @mousedown="onDragBegin">
         <!-- 封面 -->
@@ -60,7 +60,7 @@
         <!-- 收起按钮 -->
         <!-- <module-transition duration=".15"> -->
         <div v-if="!isMini" @click="changeBgmInfo(true)" class="reco-bgm-left-box">
-          <i class="reco-bgm reco-bgm-left"></i>
+          <i class="reco-bgm" :class="`reco-bgm-${align.x}`"></i>
         </div>
         <!-- </module-transition> -->
       </div>
@@ -196,13 +196,16 @@ export default {
     },
     /** @param { MouseEvent } e */
     onDragAround(e) {
+      const { innerWidth: winW, innerHeight: winH } = window;
+      const { offsetWidth: objW, offsetHeight: objH } = this.$refs.bgmBox;
+      const { min, max } = Math;
       this.dragging = true;
-      const mdx = e.clientX - this.oMouse.clientX;
-      const mdy = e.clientY - this.oMouse.clientY;
-      let dx = this.align.x === "left" ? mdx : -mdx;
-      let dy = this.align.y === "top" ? mdy : -mdy;
-      this.posX = this.orgX + dx;
-      this.posY = this.orgY + dy;
+      let dx = e.clientX - this.oMouse.clientX;
+      let dy = e.clientY - this.oMouse.clientY;
+      this.align.x === "right" && (dx = -dx);
+      this.align.y === "bottom" && (dy = -dy);
+      this.posX = max(0, min(this.orgX + dx, winW - objW));
+      this.posY = max(0, min(this.orgY + dy, winH - objH));
     },
     onDragEnd() {
       this.dragging = false;
