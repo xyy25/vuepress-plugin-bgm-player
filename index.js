@@ -32,7 +32,7 @@ export default (options, context) => ({
       POSITION: initPosition,
       AUDIOS: audios,
       AUTOPLAY: autoplay || false,
-      AUTO_SHRINK: autoShrink || true,
+      AUTO_SHRINK: autoShrink || false,
       SHRINK_MODE: shrinkMode || 'float',
       FLOAT_POSITION: floatPosition || 'left',
       FLOAT_STYLE: floatStyle || {

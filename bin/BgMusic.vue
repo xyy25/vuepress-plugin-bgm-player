@@ -9,7 +9,8 @@
       </div>
     </module-transition>
     <module-transition>
-      <div class="reco-bgm-box" v-show="!isFloat" :style="panelPosition">
+      <div ref="bgmBox" class="reco-bgm-box" v-show="!isFloat" :style="panelPos"
+        @mousedown="onDragBegin">
         <!-- 封面 -->
         <div class="reco-bgm-cover" :class="rotate" @click="changeBgmInfo(false)"
           :style="`background-image:url(${audiolist[curIndex].cover ?? defaultCover})`">
@@ -105,7 +106,57 @@ function resolveAudios(requiredAudio) {
 export default {
   mixins: [volume],
   components: {
-    ModuleTransition
+    ModuleTransition,
+  },
+  data() {
+    return {
+      defaultCover: DEFAULT_COVER,
+      panelPosition: POSITION,
+      curIndex: 0,
+      curPlayStatus: 'paused',
+      audiolist: [],
+      autoplay: AUTOPLAY,
+      draggable: true,
+      isFloat: false,
+      isMini: false,
+      firstLoad: true,
+      isMute: false,
+      isFault: false,
+      floatPosition: FLOAT_POSITION,
+      floatStyle: FLOAT_STYLE,
+      autoShrink: AUTO_SHRINK,
+      shrinkMode: SHRINK_MODE,
+
+      initPos: true,
+      dragging: false,
+      align: { x: "left", y: "bottom" }, // 记录播放器的对齐状态
+      oMouse: null,
+      orgX: 0,
+      orgY: 0,
+      posX: 0,
+      posY: 0
+    }
+  },
+  created() {
+    this.audiolist = resolveAudios(AUDIOS);
+    const { right, top } = this.panelPosition;
+    right && (this.align.x = "right");
+    top && (this.align.y = "top");
+  },
+  computed: {
+    rotate() {
+      return this.curPlayStatus === "playing" ? "rotate" : ""
+    },
+    panelPos() {
+      const { x: alignX, y: alignY } = this.align;
+      return this.initPos ? this.panelPosition : {
+        left: alignX === "left" ? `${this.posX}px` : null,
+        right: alignX === "right" ? `${this.posX}px` : null,
+        top: alignY === "top" ? `${this.posY}px` : null,
+        bottom: alignY === "bottom" ? `${this.posY}px` : null,
+        zIndex: this.panelPosition.zIndex
+      }
+    }
   },
   mounted() {
     if (this.floatPosition === 'left') {
@@ -123,37 +174,42 @@ export default {
         'border-bottom-left-radius': '20px'
       }
     }
+
     // autoShrink为true时隐藏歌曲信息
-    if (this.autoShrink) this.changeBgmInfo(true)
-  },
-  data() {
-    return {
-      defaultCover: DEFAULT_COVER,
-      panelPosition: POSITION,
-      curIndex: 0,
-      curPlayStatus: 'paused',
-      audiolist: [],
-      autoplay: AUTOPLAY,
-      isFloat: false,
-      isMini: false,
-      firstLoad: true,
-      isMute: false,
-      isFault: false,
-      floatPosition: FLOAT_POSITION,
-      floatStyle: FLOAT_STYLE,
-      autoShrink: AUTO_SHRINK,
-      shrinkMode: SHRINK_MODE
-    }
-  },
-  created() {
-    this.audiolist = resolveAudios(AUDIOS);
-  },
-  computed: {
-    rotate() {
-      return this.curPlayStatus === "playing" ? "rotate" : ""
-    }
+    if (this.autoShrink) this.changeBgmInfo(true);
+
+    let { left, right, top, bottom } = this.$refs.bgmBox.style;
+    [left, right, top, bottom] = [left, right, top, bottom]
+      .map(e => e ? parseInt(e.match(/\d+/)[0]) : 0);
+    this.posX = this.align.x === "left" ? left : right;
+    this.posY = this.align.y === "top" ? top : bottom;
+    this.initPos = false;
   },
   methods: {
+    /** @param { MouseEvent } oe */
+    onDragBegin(oe) {
+      if(!this.draggable) return;
+      [this.orgX, this.orgY] = [this.posX, this.posY];
+      this.oMouse = oe;
+      document.addEventListener('mousemove', this.onDragAround);
+      document.addEventListener('mouseup', this.onDragEnd);
+    },
+    /** @param { MouseEvent } e */
+    onDragAround(e) {
+      this.dragging = true;
+      const mdx = e.clientX - this.oMouse.clientX;
+      const mdy = e.clientY - this.oMouse.clientY;
+      let dx = this.align.x === "left" ? mdx : -mdx;
+      let dy = this.align.y === "top" ? mdy : -mdy;
+      this.posX = this.orgX + dx;
+      this.posY = this.orgY + dy;
+    },
+    onDragEnd() {
+      this.dragging = false;
+      document.removeEventListener('mousemove', this.onDragAround);
+      document.removeEventListener('mouseup', this.onDragEnd);
+    },
+
     // 显示或隐藏歌曲信息
     changeBgmInfo(bool) {
       const isMobile = !!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(

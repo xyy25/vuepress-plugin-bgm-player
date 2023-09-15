@@ -3,7 +3,8 @@
     name="ModuleTransition"
     @enter="setStyle"
     @after-enter="unsetStyle"
-    @before-leave="setStyle">
+    @before-leave="setStyle"
+    @after-leave="unsetTransform">
     <slot />
   </transition>
 </template>
@@ -27,14 +28,16 @@ export default {
   },
   methods: {
     setStyle (items) {
-      items.style.transition = `all ${this.duration}s ease-in-out ${this.delay}s`
+      items.style.transition = `${this.duration}s ease-in-out ${this.delay}s`
+      items.style.transitionProperty = "all";
       items.style.transform = this.position === 'right'
                             ? 'translateX(20px)'
                             : 'translateX(-20px)'
       items.style.opacity = 0
     },
     unsetStyle (items) {
-      items.style.transform = 'translateX(0)'
+      items.style.transform = null,
+      items.style.transitionProperty = "opacity";
       items.style.opacity = 1
     }
   }
@@ -42,7 +45,4 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-.module-enter, .module-leave-to
-  opacity 0
-  transform translateX(-20px)
 </style>
