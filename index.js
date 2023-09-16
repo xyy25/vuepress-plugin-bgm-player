@@ -29,7 +29,7 @@ export default (options, context) => ({
 
     return {
       DEFAULT_COVER: defaultCover || path.resolve(__dirname, "./images/default.jpg"),
-      POSITION: initPosition,
+      INIT_POSITION: initPosition,
       AUDIOS: audios,
       AUTOPLAY: autoplay || false,
       AUTO_SHRINK: autoShrink || false,

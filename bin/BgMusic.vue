@@ -111,7 +111,7 @@ export default {
   data() {
     return {
       defaultCover: DEFAULT_COVER,
-      panelPosition: POSITION,
+      panelPosition: INIT_POSITION,
       curIndex: 0,
       curPlayStatus: 'paused',
       audiolist: [],
