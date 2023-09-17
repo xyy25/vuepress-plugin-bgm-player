@@ -12,6 +12,7 @@ export default (options, context) => ({
     const {
       defaultCover,
       position,
+      draggable,
       audios,
       autoplay,
       autoShrink,
@@ -24,7 +25,7 @@ export default (options, context) => ({
       ...(position ?? {}),
       left: position.right ? undefined : position.left ?? '10px',
       bottom: position.top ? undefined : position.bottom ?? '10px',
-      'z-index': '999999'
+      'z-index': '40'
     }
 
     return {
@@ -33,11 +34,12 @@ export default (options, context) => ({
       AUDIOS: audios,
       AUTOPLAY: autoplay || false,
       AUTO_SHRINK: autoShrink || false,
+      DRAGGABLE: draggable || true,
       SHRINK_MODE: shrinkMode || 'float',
       FLOAT_POSITION: floatPosition || 'left',
       FLOAT_STYLE: floatStyle || {
         bottom: '200px',
-        'z-index': '999999'
+        'z-index': '40'
       }
     }
   },

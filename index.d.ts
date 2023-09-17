@@ -25,6 +25,7 @@ export interface BgPlayerOptions {
   audios: RequiredAudio[]
   autoplay: boolean
   autoShrink: boolean
+  draggable: boolean
   shrinkMode: "mini" | "float"
   floatPosition: "left" | "right"
   floatStyle: StyleValue

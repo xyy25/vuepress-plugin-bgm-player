@@ -4,7 +4,7 @@
     <audio id="bgm" :src="audiolist[curIndex].url" ref="bgm" @ended="bgmEnded" @canplay="playReady"
       @timeupdate="timeUpdate"></audio>
     <module-transition :position="floatPosition">
-      <div v-show="isFloat" @click="changeBgmInfo(false)" class="reco-float-box" :style="floatStyle">
+      <div v-show="isFloat" @click="toggleMode(false)" class="reco-float-box" :style="floatStyle">
         <img :class="rotate" :src="audiolist[curIndex].cover ?? defaultCover">
       </div>
     </module-transition>
@@ -12,7 +12,7 @@
       <div ref="bgmBox" class="reco-bgm-box" v-show="!isFloat" :style="panelPos"
         @mousedown="onDragBegin">
         <!-- 封面 -->
-        <div class="reco-bgm-cover" :class="rotate" @click="changeBgmInfo(false)"
+        <div class="reco-bgm-cover" :class="rotate" @click="toggleMode(false)"
           :style="`background-image:url(${audiolist[curIndex].cover ?? defaultCover})`">
           <!-- mini操作栏 -->
           <div v-if="isMini" class="mini-operation">
@@ -59,7 +59,7 @@
         <!-- </module-transition> -->
         <!-- 收起按钮 -->
         <!-- <module-transition duration=".15"> -->
-        <div v-if="!isMini" @click="changeBgmInfo(true)" class="reco-bgm-left-box">
+        <div v-if="!isMini" @click="toggleMode(true)" class="reco-bgm-left-box">
           <i class="reco-bgm" :class="`reco-bgm-${align.x}`"></i>
         </div>
         <!-- </module-transition> -->
@@ -116,7 +116,7 @@ export default {
       curPlayStatus: 'paused',
       audiolist: [],
       autoplay: AUTOPLAY,
-      draggable: true,
+      draggable: DRAGGABLE,
       isFloat: false,
       isMini: false,
       firstLoad: true,
@@ -154,7 +154,7 @@ export default {
         right: alignX === "right" ? `${this.posX}px` : null,
         top: alignY === "top" ? `${this.posY}px` : null,
         bottom: alignY === "bottom" ? `${this.posY}px` : null,
-        zIndex: this.panelPosition.zIndex
+        "z-index": this.panelPosition["z-index"]
       }
     }
   },
@@ -175,8 +175,9 @@ export default {
       }
     }
 
+    this.isMini = this.isMobile();
     // autoShrink为true时隐藏歌曲信息
-    if (this.autoShrink) this.changeBgmInfo(true);
+    if (this.autoShrink) this.toggleMode(true);
 
     let { left, right, top, bottom } = this.$refs.bgmBox.style;
     [left, right, top, bottom] = [left, right, top, bottom]
@@ -212,16 +213,18 @@ export default {
       document.removeEventListener('mousemove', this.onDragAround);
       document.removeEventListener('mouseup', this.onDragEnd);
     },
-
-    // 显示或隐藏歌曲信息
-    changeBgmInfo(bool) {
-      const isMobile = !!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    isMobile() {
+      return !!/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent
-      )
+      );
+    },
+    // 显示或隐藏歌曲信息
+    toggleMode(bool) {
+      const isMobile = this.isMobile();
       if (isMobile || this.shrinkMode === 'float') {
-        this.isFloat = bool
+        this.isFloat = bool;
       } else if (!isMobile && this.shrinkMode === 'mini') {
-        this.isMini = bool
+        this.isMini = bool;
       }
     },
     // audio canplay回调事件
