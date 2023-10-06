@@ -121,6 +121,9 @@ function resolveAudios(requiredAudio) {
         break;
       }
       case "remote": {
+        if(__VUEPRESS_SSR__) {
+          break;
+        }
         const params = {
           server: e.from,
           type: 'playlist',
