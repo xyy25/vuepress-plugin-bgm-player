@@ -73,34 +73,85 @@ import volume from './mixins/volume.js';
 import ModuleTransition from './ModuleTransition.vue';
 
 /**
- * @param { import("../index").RequiredAudio[] } requiredAudio
- * @return { import("../index").Audio[] }
+ * @typedef { import("../index").RequiredAudio } RequiredAudio
+ * @typedef { import("../index").Audio } Audio
+ * @return { Audio }
+ */
+const mapFunc = (obj) => ({
+  name: obj.name || obj.title || '未知歌曲',
+  artist: obj.artist || obj.author || '未知歌手',
+  url: obj.url || obj.src,
+  cover: obj.pic,
+  lrc: obj.lrc || obj.lyric || '',
+});
+
+/**
+ * @param { RequiredAudio[] } requiredAudio
+ * @return { { audios: Audio[], asyncAudios: Promise<Audio[]>[] } }
  */
 function resolveAudios(requiredAudio) {
   let files = null;
   let covers = null;
 
-  return requiredAudio.map((e) => {
-    if (!("type" in e)) {
-      return e;
+  const syn = [], asyn = [];
+  for(const e of requiredAudio) {
+    if(!("type" in e)) {
+      syn.push(e);
+      continue;
     }
-    // 获取静态目录下相应目录的音乐(由于glob无法使用变量，所以只能手动填写相对路径了)
-    if (!files) files = import.meta.glob('../../../public/music/**/*.mp3', { eager: true });
-    if (!covers) covers = import.meta.glob('../../../public/music/**/*.png', { eager: true });
 
-    return Object.keys(files).map(m => {
-      const reg = new RegExp(`.*public(${e.url}(.+?)( - (.+))?\\.mp3)`);
-      const match = m.match(reg);
-      const coverUrl = m.replace(".mp3", ".png");
+    switch(e.type) {
+      case "dir": {
+        // 获取静态目录下相应目录的音乐(由于glob无法使用变量，所以只能手动填写相对路径了)
+        if (!files) files = import.meta.glob('../../../public/music/**/*.mp3', { eager: true });
+        if (!covers) covers = import.meta.glob('../../../public/music/**/*.png', { eager: true });
 
-      return {
-        name: match[2] ?? '未知歌曲',
-        artist: match[4] ?? '未知歌手',
-        url: match[1],
-        cover: coverUrl in covers ? coverUrl : DEFAULT_COVER
+        syn.push(...Object.keys(files).map(m => {
+          const reg = new RegExp(`.*public(${e.url}(.+?)( - (.+))?\\.mp3)`);
+          const match = m.match(reg);
+          const coverUrl = m.replace(".mp3", ".png");
+
+          return {
+            name: match[2] ?? '未知歌曲',
+            artist: match[4] ?? '未知歌手',
+            url: match[1],
+            cover: coverUrl in covers ? coverUrl : __DEFAULT_COVER__
+          }
+        }));
+        break;
       }
-    });
-  }).flat();
+      case "remote": {
+        const params = {
+          server: e.from,
+          type: 'playlist',
+          id: e.mid,
+          r: Math.random(),
+        }
+
+        let url = e.api, paramsArr = [];
+        Object.keys(params).forEach((key) => paramsArr.push(key + '=' + params[key]));
+        url += '?' + paramsArr.join('&');
+
+        const headers = { referer: null };
+        const prom = fetch(url, { headers })
+          .then((res) => res.json())
+          .then((result) => {
+            console.log(url, result);
+
+            /** @type {Audio & { lrc: any } []} */
+            const mapped = result.map(mapFunc);
+            return mapped;
+        });
+        asyn.push(prom);
+        break;
+      }
+    }
+  }
+
+  return {
+    audios: syn,
+    asyncAudios: asyn
+  };
 }
 
 export default {
@@ -110,22 +161,31 @@ export default {
   },
   data() {
     return {
-      defaultCover: DEFAULT_COVER,
-      panelPosition: INIT_POSITION,
+      /** @type {string} */
+      defaultCover: __DEFAULT_COVER__,
+      /** @type {import("../index").PositionOptions} */
+      panelPosition: __INIT_POSITION__,
       curIndex: 0,
       curPlayStatus: 'paused',
-      audiolist: [],
-      autoplay: AUTOPLAY,
-      draggable: DRAGGABLE,
+      /** @type {Audio[]} */
+      audiolist: [{ name: '音乐加载中..', artist: '', url: '', cover: '' }],
+      /** @type {boolean} */
+      autoplay: __AUTOPLAY__,
+      /** @type {boolean} */
+      draggable: __DRAGGABLE__,
       isFloat: false,
       isMini: false,
       firstLoad: true,
       isMute: false,
       isFault: false,
-      floatPosition: FLOAT_POSITION,
-      floatStyle: FLOAT_STYLE,
-      autoShrink: AUTO_SHRINK,
-      shrinkMode: SHRINK_MODE,
+      /** @type {"left" | "right"} */
+      floatPosition: __FLOAT_POSITION__,
+      /** @type {import("vue").StyleValue} */
+      floatStyle: __FLOAT_STYLE__,
+      /** @type {boolean} */
+      autoShrink: __AUTO_SHRINK__,
+      /** @type {"mini" | "float"} */
+      shrinkMode: __SHRINK_MODE__,
 
       initPos: true,
       dragging: false,
@@ -138,7 +198,12 @@ export default {
     }
   },
   created() {
-    this.audiolist = resolveAudios(AUDIOS);
+    const { audios, asyncAudios } = resolveAudios(__AUDIOS__);
+    this.audiolist = audios;
+    Promise.all(asyncAudios).then(
+      res => this.audiolist.push(...res.flat())
+    );
+
     const { right, top } = this.panelPosition;
     right && (this.align.x = "right");
     top && (this.align.y = "top");

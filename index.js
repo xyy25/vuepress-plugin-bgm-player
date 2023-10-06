@@ -3,8 +3,8 @@ import { path, getDirname } from "@vuepress/utils";
 const __dirname = getDirname(import.meta.url);
 
 /**
- * @typedef { import(".").Audio } Audio
- * @param { import(".").BgPlayerOptions & { audios: Audio[] } } options
+ * @typedef { import("./index").BgPlayerOptions } BgPlayerOptions
+ * @param { Partial<BgPlayerOptions> } options
  * @param { any } [context]
 */
 export default (options, context) => ({
@@ -29,15 +29,15 @@ export default (options, context) => ({
     }
 
     return {
-      DEFAULT_COVER: defaultCover || path.resolve(__dirname, "./images/default.jpg"),
-      INIT_POSITION: initPosition,
-      AUDIOS: audios,
-      AUTOPLAY: autoplay || false,
-      AUTO_SHRINK: autoShrink || false,
-      DRAGGABLE: draggable || true,
-      SHRINK_MODE: shrinkMode || 'float',
-      FLOAT_POSITION: floatPosition || 'left',
-      FLOAT_STYLE: floatStyle || {
+      __DEFAULT_COVER__: defaultCover || path.resolve(__dirname, "./images/default.jpg"),
+      __INIT_POSITION__: initPosition,
+      __AUDIOS__: audios,
+      __AUTOPLAY__: autoplay || false,
+      __AUTO_SHRINK__: autoShrink || false,
+      __DRAGGABLE__: draggable || true,
+      __SHRINK_MODE__: shrinkMode || 'float',
+      __FLOAT_POSITION__: floatPosition || 'left',
+      __FLOAT_STYLE__: floatStyle || {
         bottom: '200px',
         'z-index': '40'
       }

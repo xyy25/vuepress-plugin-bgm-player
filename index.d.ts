@@ -1,4 +1,5 @@
 import type { PluginObject } from "@vuepress/core";
+import type { StyleValue } from "vue";
 
 export type PositionOptions = {
   'z-index': string
@@ -17,6 +18,11 @@ export interface Audio {
 export type RequiredAudio = Audio | {
   type: "dir"
   url: string
+} | {
+  type: "remote"
+  api: string,
+  from: "netease",
+  mid: string
 }
 
 export interface BgPlayerOptions {
@@ -31,6 +37,6 @@ export interface BgPlayerOptions {
   floatStyle: StyleValue
 }
 
-declare const _default: (options: Partial<BgPlayerOptions> & { audios: RequiredAudio[] }, context?: any) => PluginObject;
+declare const _default: (options: Partial<BgPlayerOptions>, context?: any) => PluginObject;
 
 export = _default;
