@@ -202,10 +202,18 @@ export default {
   },
   created() {
     const { audios, asyncAudios } = resolveAudios(__AUDIOS__);
-    this.audiolist = audios;
-    Promise.all(asyncAudios).then(
-      res => this.audiolist.push(...res.flat())
-    );
+    let inited = false;
+    if(audios && audios.length) {
+      this.audiolist = audios;
+      inited = true;
+    }
+    Promise.all(asyncAudios).then(res => {
+      if(!inited) {
+        this.audiolist = [];
+        inited = true;
+      }
+      this.audiolist.push(...res.flat())
+    });
 
     const { right, top } = this.panelPosition;
     right && (this.align.x = "right");
