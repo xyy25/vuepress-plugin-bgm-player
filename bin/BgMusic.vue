@@ -356,7 +356,7 @@ export default {
     // 播放
     playBgm() {
       const playPromise = this.$refs.bgm.play()
-      if (playPromise !== undefined) {
+      if (playPromise !== void 0) {
         playPromise.then(res => {
           if (this.isFault) {
             this.isFault = false

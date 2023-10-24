@@ -23,8 +23,8 @@ export default (options, context) => ({
 
     const initPosition =  {
       ...(position ?? {}),
-      left: position.right ? undefined : position.left ?? '10px',
-      bottom: position.top ? undefined : position.bottom ?? '10px',
+      left: position.right ? void 0 : position.left ?? '10px',
+      bottom: position.top ? void 0 : position.bottom ?? '10px',
       'z-index': '40'
     }
 
