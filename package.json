@@ -24,6 +24,11 @@
     "url": "https://github.com/vuepress-reco/vuepress-plugin-bgm-player/issues"
   },
   "homepage": "https://vuepress-theme-reco.recoluan.com/views/plugins/bgmPlayer.html",
+  "dependencies": {
+    "@better-scroll/core": "^2.5.1",
+    "@better-scroll/mouse-wheel": "^2.5.1",
+    "@better-scroll/scroll-bar": "^2.5.1"
+  },
   "devDependencies": {
     "babel-eslint": "^10.0.3",
     "eslint": "^6.4.0",

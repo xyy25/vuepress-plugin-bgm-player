@@ -12,7 +12,8 @@ export interface Audio {
   name: string,
   artist: string,
   url: string,
-  cover?: string
+  lrc?: string,
+  cover?: string,
 }
 
 export type RequiredAudio = Audio | {
