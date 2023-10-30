@@ -4,6 +4,7 @@ import { throttle } from "./throttle";
 declare const __VUEPRESS_SSR__: boolean;
 declare const __AUTOPLAY__: boolean;
 const VOLUME_KEY = "reco-bgm-volume";
+type CallbackFunc = (e: Event) => void;
 
 const audioRef = ref<HTMLAudioElement | null>(null);
 const curPlayStatus = ref<"playing" | "paused">("paused");
@@ -15,8 +16,8 @@ const analyserAudio = ref<AnalyserNode | null>(null);
 const sourceAudio = ref<MediaElementAudioSourceNode | null>(null);
 
 const canplay = ref(false);
-const timeUpdateHooks = ref<((e: Event) => void)[]>([]);
-const endedHooks = ref<((e: Event) => void)[]>([]);
+const timeUpdateHooks: CallbackFunc[] = [];
+const endedHooks: CallbackFunc[] = [];
 
 if (!__VUEPRESS_SSR__) {
   let firstLoad = false;
@@ -42,10 +43,10 @@ if (!__VUEPRESS_SSR__) {
       }
     });
     audio.addEventListener("ended", (e) =>
-      endedHooks.value.forEach((f) => f(e))
+      endedHooks.forEach((f) => f(e))
     );
     audio.addEventListener("timeupdate", (e) =>
-      timeUpdateHooks.value.forEach((f) => f(e))
+      timeUpdateHooks.forEach((f) => f(e))
     );
 
     // @ts-ignore
@@ -114,11 +115,11 @@ export const audioPause = () => {
   audioRef.value.pause();
 };
 
-export const registerTimeupdate = (cb: (e: Event) => void) => {
-  timeUpdateHooks.value.push(throttle(cb, 500));
+export const registerTimeupdate = (cb: CallbackFunc) => {
+  timeUpdateHooks.push(throttle(cb, 500));
 }
-export const registerEnded = (cb: (e: Event) => void) => {
-  endedHooks.value.push(cb);
+export const registerEnded = (cb: CallbackFunc) => {
+  endedHooks.push(cb);
 }
 export const useAudioRef = () => audioRef;
 export const useCurPlayStatus = () => curPlayStatus;

@@ -4,7 +4,6 @@
     <audio id="bgm"
       :src="curAudio.url"
       ref="bgm"
-      @ended="bgmEnded"
       crossorigin="anonymous"
     />
     <module-transition :position="floatPosition">
@@ -166,6 +165,7 @@ export default {
       this.currentTime = e.target.currentTime;
       this.totalTime = e.target.duration;
     });
+    comp.registerEnded(() => this.bgmEnded());
 
     this.isMini = this.isMobile();
     // autoShrink为true时隐藏歌曲信息
@@ -243,25 +243,16 @@ export default {
     playNext() {
       this.currentTime = 0;
       this.isFault = false;
-      if (this.curIndex >= this.audiolist.length - 1) {
-        this.curIndex = 0;
-      } else {
-        this.curIndex++;
-      }
+      comp.playNext();
     },
     // 播放上一首
     playLast() {
       this.currentTime = 0;
       this.isFault = false;
-      if (this.curIndex <= 0) {
-        this.curIndex = this.audiolist.length - 1;
-      } else {
-        this.curIndex--;
-      }
+      comp.playLast();
     },
     // bgm结束时自动下一首
     bgmEnded() {
-      this.currentTime = 0;
       this.playNext();
     },
     // 点击进度条跳播

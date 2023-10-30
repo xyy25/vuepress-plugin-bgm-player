@@ -110,6 +110,20 @@ Promise.all(asyncAudios).then(res => {
   httpEnd.value = true;
 });
 
+export const playNext = () => {
+  if (curIndex.value >= audioList.value.length - 1) {
+    curIndex.value = 0;
+  } else {
+    curIndex.value++;
+  }
+}
+export const playLast = () => {
+  if(curIndex.value <= 0) {
+    curIndex.value = audioList.value.length - 1;
+  } else {
+    curIndex.value--;
+  }
+}
 export const useAudioList = () => audioList;
 export const useCurIndex = () => curIndex;
 export const useCurAudio = () => curAudio;

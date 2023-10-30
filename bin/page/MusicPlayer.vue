@@ -151,19 +151,19 @@ export default {
     }
   },
   mounted() {
-    this.href = window.location.href;
     this.isLoading = !(this.songReady && this.httpEnd);
+    if(__VUEPRESS_SSR__) {
+      return;
+    }
     comp.registerTimeupdate((e) => {
       this.currentTime = e.target.currentTime;
       this.totalTime = e.target.duration;
     });
     comp.registerEnded((e) => this.end(e));
+    this.href = window.location.href;
     this.getSong();
     if(this.songReady) {
       this.onLoadAudio();
-    }
-    if(!__VUEPRESS_SSR__) {
-      setTimeout(() => this.initAudioRef(), 100);
     }
   },
   watch: {
@@ -273,7 +273,10 @@ export default {
       this.signer = artist;
       this.albumImg = cover && cover.replace("250y250", "400y400") || "";
       this.albumName = "歌单名" || "";
-      this.lyric = lyricParser(lrc).lyric;
+      fetch(lrc)
+        .then(res => res.text())
+        .then(txt => lyricParser(txt).lyric)
+        .then(lyric => this.lyric = lyric);
     },
     clearTimer(type) {
       this.lyricTimer[type] && clearTimeout(this.lyricTimer[type]);
@@ -307,10 +310,6 @@ export default {
       }
     },
     onLoadAudio() {
-      if(__VUEPRESS_SSR__) {
-        return;
-      }
-
       // 获取频率数组
       const bufferLength = this.analyserAudio.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
