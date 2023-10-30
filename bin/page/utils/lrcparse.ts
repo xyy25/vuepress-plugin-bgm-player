@@ -25,7 +25,7 @@ export function parseLyric(lrc: string): LRCObject[] {
       const sec = Number(String(t.match(/:\d*/i)).slice(1));
       const time = min * 60 + sec;
       if (content !== '') {
-        lrcObj.push({ time: time, content });
+        lrcObj.push({ time, content });
       }
     }
   }

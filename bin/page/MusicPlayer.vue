@@ -1,5 +1,5 @@
 <template>
-  <div class="music_player">
+  <div class="music-player">
     <div class="loading" v-if="isLoading">
       <Loading />
     </div>
@@ -13,7 +13,7 @@
           </div>
         </div>
       </div>
-      <div class="progress-bar-wrap">
+      <div class="progress-bar-wrap clickable" ref="progressBarRef" @click="progressJump">
         <div class="time">{{ formatTime(currentTime) }} / {{ formatTime(totalTime) }}</div>
         <div class="progress-bar" :style="{ width: progress }"></div>
       </div>
@@ -32,7 +32,8 @@
               p-id="1139" fill="#ffffff"></path>
           </svg>
         </div>
-        <div class="btn share" v-copy="href" title="分享">
+        <!-- <div class="btn share" v-copy="href" title="分享"> -->
+        <div class="btn share" title="分享">
           <svg t="1640253998462" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
             p-id="2826" width="15" height="15">
             <path
@@ -58,9 +59,8 @@
       </div>
     </div>
     <div class="right">
-
-      <canvas id="canvas" :style="{ transition: 'all .2s ease-in-out', opacity: !panelIsLyric ? 1 : 0 }"></canvas>
-      <div class="lyric-container" :style="{ transition: 'all .2s ease-in-out', opacity: panelIsLyric ? 1 : 0 }">
+      <canvas ref="audioCanvas" v-if="!panelIsLyric" :style="{ transition: 'all .2s ease-in-out' }"></canvas>
+      <div class="lyric-container" v-else :style="{ transition: 'all .2s ease-in-out' }">
         <div class="music-name">
           <p>{{ title }}</p>
           <p>歌手：{{ signer }}&emsp;&emsp;专辑：{{ albumName }}</p>
@@ -69,7 +69,7 @@
         <Scroller :data="lyric" :options="{ disableTouch: true }" @init="onInitScroller" class="lyric-wrap" ref="scroller"
           v-else>
           <div>
-            <div :class="getActiveCls(index)" :key="index" class="lyric-item" ref="lyric"
+            <div :class="{ active: activeLyricIndex === index }" :key="index" class="lyric-item" ref="lyric"
               v-for="(l, index) in lyricWithTranslation">
               <p :key="contentIndex" class="lyric-text" v-for="(content, contentIndex) in l.contents">{{ content }}</p>
             </div>
@@ -77,8 +77,14 @@
         </Scroller>
       </div>
     </div>
-    <audio id="bgm" :src="musicSrc" @canplay="ready" @ended="end" @timeupdate="updateTime" ref="audio"
-      crossOrigin="anonymous"></audio>
+    <!-- <audio id="bgm"
+      :src="musicSrc"
+      ref="audio"
+      @canplay="ready"
+      @ended="end"
+      @timeupdate="updateTime"
+      crossorigin="anonymous"
+    /> -->
   </div>
 </template>
 
@@ -87,8 +93,9 @@ import Scroller from "./Scroller.vue";
 import Loading from "./Loading.vue";
 import { formatTime, audioTheme, lyricParser } from './utils';
 import albumImg from "../assets/img/album.jpg?url";
-import { getSongDetail } from '../api';
-import { mapState, mapMutations, mapActions } from "../store/helper/music";
+import * as comp from "../composables";
+// import { getSongDetail } from '../api';
+// import { mapState, mapMutations, mapActions } from "../store/helper/music";
 
 const WHEEL_TYPE = "wheel";
 const SCROLL_TYPE = "scroll";
@@ -102,6 +109,14 @@ export default {
   },
   data() {
     return {
+      audio: comp.useAudioRef(),
+      audiolist: comp.useAudioList(),
+      curAudio: comp.useCurAudio(),
+      curIndex: comp.useCurIndex(),
+      curPlayStatus: comp.useCurPlayStatus(),
+      httpEnd: comp.useHttpEnd(),
+      currentTime: comp.useCurTime(),
+      totalTime: comp.useTotalTime(),
       formatTime,
       isLoading: true,
       href: '',
@@ -112,26 +127,13 @@ export default {
       albumName: '',
       signer: '',
       songReady: false,
-      progress: '0%',
-      totalTime: '',
-      panelIsLyric: true,
-
-      httpEnd: true,
-
+      panelIsLyric: false,
       sourceAudio: null,
       contextAudio: null,
       analyserAudio: null
     }
   },
   props: {
-    musicId: {
-      type: [String, Number],
-      default: ''
-    },
-    musicSrc: {
-      type: String,
-      default: ''
-    },
     theme: {
       type: [String, Array],
       default: "apple"
@@ -149,18 +151,13 @@ export default {
   },
   mounted() {
     this.href = window.location.href;
-    this.getSone()
-    // 解决ios设备上无法播放问题
-    const userAgent = navigator.userAgent;
-    const isIOS = !!userAgent.match(/\(i[^;]+;( U;)? CPU.+Mac OS X/);
-    if (isIOS) {
-      const musicDom = document.getElementById('bgm');
-      musicDom.load();
+    this.getSong();
+    if(!__VUEPRESS_SSR__) {
+      setTimeout(() => this.initAudioRef(), 100);
     }
   },
   beforeUnmount() {
-    this.setPlayingState(0)
-    this.setPlayingState(false)
+    this.setPlayingState(false);
   },
   watch: {
     activeLyricIndex(newIndex, oldIndex) {
@@ -169,27 +166,20 @@ export default {
         !this.lyricScrolling[WHEEL_TYPE] &&
         !this.lyricScrolling[SCROLL_TYPE]
       ) {
-        this.scrollToActiveLyric()
+        this.scrollToActiveLyric();
       }
     },
-    currentSong(newSong) {
-      // 清空了歌曲
-      if (!newSong.id) {
-        this.audio.pause()
-        this.audio.currentTime = 0
-        return
-      }
-      this.songReady = false
-      if (this.timer) {
-        clearTimeout(this.timer)
-      }
-      this.timer = setTimeout(() => {
-        this.play()
-      }, 1000)
+    curAudio() {
+      this.getSong();
     },
-    playing(newPlaying) {
+    curPlayStatus(newVal) {
+      if(newVal === "playing") {
+        this.onLoadAudio();
+      }
+    },
+    playing(newVal) {
       this.$nextTick(() => {
-        newPlaying ? this.play() : this.pause()
+        newVal ? this.play() : this.pause()
       })
     },
     songReady(n) {
@@ -208,9 +198,8 @@ export default {
     }
   },
   computed: {
-    ...mapState(["currentSong", "currentTime", "playing"]),
-    audio() {
-      return this.$refs.audio
+    playing() {
+      return this.curPlayStatus === "playing";
     },
     activeLyricIndex() {
       let temp = this.lyricWithTranslation
@@ -222,104 +211,113 @@ export default {
           )
         })
         : -1
-      return temp
+      return temp;
     },
     lyricWithTranslation() {
-      let ret = []
+      let ret = [];
       // 空内容的去除
-      const lyricFiltered = this.lyric.filter(({ content }) => Boolean(content))
+      const lyricFiltered = this.lyric.filter(({ content }) => Boolean(content));
       // content统一转换数组形式
       if (lyricFiltered.length) {
         lyricFiltered.forEach(l => {
           const { time, content } = l
           const lyricItem = { time, content, contents: [content] }
-          ret.push(lyricItem)
+          ret.push(lyricItem);
         })
       } else {
         ret = lyricFiltered.map(({ time, content }) => ({
           time,
           content,
           contents: [content]
-        }))
+        }));
       }
-      return ret
+      return ret;
+    },
+    progress() {
+      return this.totalTime
+        ? Math.ceil(this.currentTime / this.totalTime * 100) + '%'
+        : '0%';
     }
   },
   methods: {
-    ...mapMutations(["setPlayingState", "setCurrentTime"]),
-    ...mapActions(["startSong"]),
-    updateTime(e) {
-      const time = e.target.currentTime
-      this.progress = Math.ceil(time / this.audio.duration * 100) + '%'
-      this.setCurrentTime(time)
+    // ...mapMutations(["setPlayingState", "setCurrentTime"]),
+    // ...mapActions(["startSong"]),
+    /** @param {boolean} state */
+    setPlayingState(state) {
+      this.curPlayStatus = state ? "playing" : "paused";
+    },
+    initAudioRef() {
+      this.audio.addEventListener('canplay', this.ready);
+      this.audio.addEventListener('ended', this.end);
     },
     ready() {
-      this.songReady = true
-      this.totalTime = this.audio.duration;
+      this.songReady = true;
     },
     end() {
-      this.pause()
+      this.getSong();
     },
     async play() {
       if (this.songReady) {
-        this.progress = Math.ceil(this.currentTime / this.audio.duration * 100) + '%'
         try {
           // await
-          this.audio.play()
-          this.onLoadAudio()
+          this.audio.play();
         } catch (error) {
-          this.setPlayingState(false)
+          this.setPlayingState(false);
         }
       }
     },
     pause() {
-      this.audio.pause()
-      this.setPlayingState(false)
+      this.audio.pause();
+      this.setPlayingState(false);
+    },
+    /** @param {Event} e */
+    progressJump(e) {
+      // 歌曲未加载完成时点击进度条的错误处理
+      if(!this.totalTime) return;
+      const bar = this.$refs.progressBarRef;
+      const percent = e.offsetX / bar.offsetWidth;
+      console.log(percent, e.offsetX, bar.offsetWidth);
+      this.currentTime = percent * this.totalTime;
     },
     onClickSong() {
-      this.setPlayingState(!this.playing)
+      this.setPlayingState(!this.playing);
     },
-    async getSone() {
-      this.httpEnd = false;
-      const result = await getSongDetail(this.musicId)
-      this.httpEnd = true;
-
-      const { cover, lyric, link, id, album, artist, title } = result;
-      this.title = title;
+    getSong() {
+      const { name, cover, artist, lrc } = this.curAudio;
+      this.title = name;
       this.signer = artist;
-      this.albumName = album
-
       this.albumImg = cover && cover.replace("250y250", "400y400") || "";
-      this.lyric = lyricParser(lyric).lyric
+      this.albumName = "歌单名" || "";
+      this.lyric = lyricParser(lrc).lyric;
     },
     clearTimer(type) {
-      this.lyricTimer[type] && clearTimeout(this.lyricTimer[type])
+      this.lyricTimer[type] && clearTimeout(this.lyricTimer[type]);
     },
-    getActiveCls(index) {
-      return this.activeLyricIndex === index ? "active" : ""
-    },
+    // getActiveCls(index) {
+    //   return this.activeLyricIndex === index ? "active" : ""
+    // },
     onInitScroller(scoller) {
       const onScrollStart = type => {
-        this.clearTimer(type)
-        this.lyricScrolling[type] = true
+        this.clearTimer(type);
+        this.lyricScrolling[type] = true;
       }
       const onScrollEnd = type => {
         // 滚动结束后两秒 歌词开始自动滚动
-        this.clearTimer(type)
+        this.clearTimer(type);
         this.lyricTimer[type] = setTimeout(() => {
-          this.lyricScrolling[type] = false
-        }, AUTO_SCROLL_RECOVER_TIME)
+          this.lyricScrolling[type] = false;
+        }, AUTO_SCROLL_RECOVER_TIME);
       }
-      scoller.on("scrollStart", onScrollStart.bind(null, SCROLL_TYPE))
-      scoller.on("scrollEnd", onScrollEnd.bind(null, SCROLL_TYPE))
+      scoller.on("scrollStart", onScrollStart.bind(null, SCROLL_TYPE));
+      scoller.on("scrollEnd", onScrollEnd.bind(null, SCROLL_TYPE));
     },
     scrollToActiveLyric() {
       if (this.activeLyricIndex !== -1) {
-        const { scroller, lyric } = this.$refs
+        const { scroller, lyric } = this.$refs;
         if (lyric && lyric[this.activeLyricIndex]) {
           scroller
             .getScroller()
-            .scrollToElement(lyric[this.activeLyricIndex], 200, 0, true)
+            .scrollToElement(lyric[this.activeLyricIndex], 200, 0, true);
         }
       }
     },
@@ -348,25 +346,26 @@ export default {
       // 获取频率数组
       const bufferLength = this.analyserAudio.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
-      const canvas = document.getElementById("canvas");
-      canvas.width = 435;
-      canvas.height = 250;
-      const ctx = canvas.getContext("2d");
-      const WIDTH = canvas.width;
-      const HEIGHT = canvas.height;
-
-      const barWidth = WIDTH / bufferLength;
-      let barHeight;
-      // 主题色
-      let canvasTheme;
-      if (typeof this.theme === "string") {
-        canvasTheme = audioTheme[this.theme]
-      } else {
-        canvasTheme = this.theme;
-      }
 
       const renderFrame = () => {
         requestAnimationFrame(renderFrame);
+        /** @type {HTMLCanvasElement | null} */
+        const canvas = this.$refs.audioCanvas;
+        if(!canvas) return;
+
+        [canvas.width, canvas.height] = [435, 250];
+        const ctx = canvas.getContext("2d");
+        const [WIDTH, HEIGHT] = [canvas.width, canvas.height];
+
+        const barWidth = WIDTH / bufferLength;
+        let barHeight;
+        // 主题色
+        let canvasTheme;
+        if (typeof this.theme === "string") {
+          canvasTheme = audioTheme[this.theme]
+        } else {
+          canvasTheme = this.theme;
+        }
 
         // 将当前频率数据复制到传入的Uint8Array，更新频率数据
         this.analyserAudio.getByteFrequencyData(dataArray);
@@ -375,7 +374,7 @@ export default {
         for (let i = 0, x = 0; i < bufferLength; i++) {
           barHeight = dataArray[i];
           const gradient = ctx.createLinearGradient(0, 0, 0, 250)
-          this.colorPick(gradient, canvasTheme)
+          this.colorPick(gradient, canvasTheme);
           ctx.fillStyle = gradient;
           ctx.fillRect(x, 250 - barHeight, barWidth, barHeight);
           x += barWidth + 2;
@@ -386,16 +385,17 @@ export default {
     colorPick(gradient, arr) {
       arr.forEach(item => {
         const { pos, color } = item;
-        gradient.addColorStop(pos, color)
+        gradient.addColorStop(pos, color);
       })
     }
   }
 }
 </script>
-<style lang="scss" scoped>
-.music_player {
-  width: 800px;
+<style lang="postcss" scoped>
+.music-player {
+  width: 100%;
   display: flex;
+  justify-content: center;
   overflow: hidden;
   font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, "\5FAE\8F6F\96C5\9ED1", Arial, sans-serif !important;
   position: relative;
@@ -407,7 +407,7 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 100;
+    z-index: 10;
   }
 
   .left {
@@ -448,7 +448,7 @@ export default {
       flex-direction: row;
       align-items: center;
       justify-content: center;
-      // background: #E6E5E6;
+      /* background: #E6E5E6; */
       width: 320px;
       height: 320px;
 
@@ -549,14 +549,8 @@ export default {
     position: relative;
 
     canvas {
-      position: absolute;
-      left: 0;
-      bottom: 140px;
-      // width: 350px;
-      height: 200px;
-      // width: 100%;
-      // height: 100%;
-      z-index: 99999;
+      height: 50%;
+      z-index: 30;
     }
 
     .noLyric {
@@ -568,9 +562,9 @@ export default {
       color: #7e7b7b;
 
       p:first-child {
-        // color:#333;
+        /* color:#333; */
         font-size: 22px;
-        // font-weight:
+        /* font-weight: */
         margin-bottom: 5px;
         ;
       }
@@ -606,6 +600,14 @@ export default {
 
   100% {
     transform: rotate(1turn);
+  }
+}
+
+.clickable {
+  cursor: pointer;
+
+  &:hover, &:active {
+    filter: drop-shadow(0 0 0.2em rgb(255 255 255 / .2)) drop-shadow(0 0 0.2em rgb(255 255 255 / .2))
   }
 }
 

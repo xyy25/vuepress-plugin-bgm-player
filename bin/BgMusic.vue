@@ -1,8 +1,14 @@
 <template>
   <div class="reco-bgm-panel">
     <!-- 播放器 -->
-    <audio id="bgm" :src="curAudio.url" ref="bgm" @ended="bgmEnded" @canplay="playReady"
-      @timeupdate="timeUpdate"></audio>
+    <audio id="bgm"
+      :src="curAudio.url"
+      ref="bgm"
+      @canplay="playReady"
+      @ended="bgmEnded"
+      @timeupdate="timeUpdate"
+      crossorigin="anonymous"
+    />
     <module-transition :position="floatPosition">
       <div v-show="isFloat" @click="toggleMode(false)" class="reco-float-box" :style="floatStyle">
         <img :class="rotate" :src="curAudio.cover ?? defaultCover">
@@ -71,7 +77,7 @@
 <script>
 import volume from './mixins/volume.js';
 import ModuleTransition from './ModuleTransition.vue';
-import { useAudioList, useCurAudio, useCurIndex, useCurPlayStatus } from "./composables";
+import * as comp from "./composables";
 
 export default {
   mixins: [volume],
@@ -79,14 +85,16 @@ export default {
     ModuleTransition,
   },
   data() {
-    const audiolist = useAudioList();
-    const curIndex = useCurIndex();
-    const curPlayStatus = useCurPlayStatus();
-    const curAudio = useCurAudio();
+    const audioRef = comp.useAudioRef();
+    const audiolist = comp.useAudioList();
+    const curIndex = comp.useCurIndex();
+    const curPlayStatus = comp.useCurPlayStatus();
+    const curAudio = comp.useCurAudio();
     return {
       curIndex,
       curPlayStatus,
       curAudio,
+      audioRef,
       audiolist,
       /** @type {string} */
       defaultCover: __DEFAULT_COVER__,
@@ -167,6 +175,7 @@ export default {
     this.posX = this.align.x === "left" ? left : right;
     this.posY = this.align.y === "top" ? top : bottom;
     this.initPos = false;
+    this.audioRef = this.$refs.bgm;
   },
   methods: {
     /** @param { MouseEvent } oe */
