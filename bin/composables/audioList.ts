@@ -1,6 +1,5 @@
 import { computed, ref } from "vue";
 import type { Audio, RequiredAudio } from "../../index";
-import { useAudioRef } from "./audioRef";
 
 declare const __VUEPRESS_SSR__: boolean;
 declare const __DEFAULT_COVER__: string;
@@ -92,7 +91,6 @@ function resolveAudios(requiredAudio: RequiredAudio[]): ResolvedAudios {
 
 const audioList = ref<Audio[]>([{ name: '音乐加载中..', artist: '', url: '', cover: __DEFAULT_COVER__ }]);
 const curIndex = ref(0);
-const curPlayStatus = ref<'playing' | 'paused'>('paused');
 const curAudio = computed(() => audioList.value[curIndex.value]);
 const httpEnd = ref(false);
 
@@ -114,6 +112,5 @@ Promise.all(asyncAudios).then(res => {
 
 export const useAudioList = () => audioList;
 export const useCurIndex = () => curIndex;
-export const useCurPlayStatus = () => curPlayStatus;
 export const useCurAudio = () => curAudio;
 export const useHttpEnd = () => httpEnd;

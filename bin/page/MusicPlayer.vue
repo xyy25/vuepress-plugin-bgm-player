@@ -4,12 +4,14 @@
       <Loading />
     </div>
     <div class="left">
-      <img class="point" src="../assets/img/point.png" alt="">
-      <img :class="['bar', playing ? 'play' : '']" src="../assets/img/bar.png" alt="">
-      <div class="img-outer-container">
-        <div :class="['img-outer', playing ? '' : 'paused']">
-          <div class="img-album">
-            <img :src="albumImg" alt="">
+      <div class="cover">
+        <img class="point" src="../assets/img/point.png" alt="">
+        <img :class="['bar', playing ? 'play' : '']" src="../assets/img/bar.png" alt="">
+        <div class="img-outer-container">
+          <div :class="['img-outer', playing ? '' : 'paused']">
+            <div class="img-album">
+              <img :src="albumImg" alt="">
+            </div>
           </div>
         </div>
       </div>
@@ -115,10 +117,13 @@ export default {
       curIndex: comp.useCurIndex(),
       curPlayStatus: comp.useCurPlayStatus(),
       httpEnd: comp.useHttpEnd(),
-      currentTime: comp.useCurTime(),
-      totalTime: comp.useTotalTime(),
+      songReady: comp.useCanplay(),
+      analyserAudio: comp.useAnalyserAudio(),
       formatTime,
+      currentTime: 0,
+      totalTime: 0,
       isLoading: true,
+      isRendering: false,
       href: '',
       albumImg,
       nolyric: false,
@@ -126,11 +131,7 @@ export default {
       title: '',
       albumName: '',
       signer: '',
-      songReady: false,
       panelIsLyric: false,
-      sourceAudio: null,
-      contextAudio: null,
-      analyserAudio: null
     }
   },
   props: {
@@ -151,13 +152,19 @@ export default {
   },
   mounted() {
     this.href = window.location.href;
+    this.isLoading = !(this.songReady && this.httpEnd);
+    comp.registerTimeupdate((e) => {
+      this.currentTime = e.target.currentTime;
+      this.totalTime = e.target.duration;
+    });
+    comp.registerEnded((e) => this.end(e));
     this.getSong();
+    if(this.songReady) {
+      this.onLoadAudio();
+    }
     if(!__VUEPRESS_SSR__) {
       setTimeout(() => this.initAudioRef(), 100);
     }
-  },
-  beforeUnmount() {
-    this.setPlayingState(false);
   },
   watch: {
     activeLyricIndex(newIndex, oldIndex) {
@@ -172,29 +179,16 @@ export default {
     curAudio() {
       this.getSong();
     },
-    curPlayStatus(newVal) {
-      if(newVal === "playing") {
+    curPlayStatus(n) {
+      if(n === "playing" && !this.isRendering) {
         this.onLoadAudio();
       }
     },
-    playing(newVal) {
-      this.$nextTick(() => {
-        newVal ? this.play() : this.pause()
-      })
-    },
     songReady(n) {
-      if (n && this.httpEnd) {
-        this.isLoading = false
-      } else {
-        this.isLoading = true
-      }
+      this.isLoading = !(n && this.httpEnd);
     },
     httpEnd(n) {
-      if (n && this.songReady) {
-        this.isLoading = false
-      } else {
-        this.isLoading = true
-      }
+      this.isLoading = !(n && this.songReady);
     }
   },
   computed: {
@@ -240,35 +234,22 @@ export default {
     }
   },
   methods: {
-    // ...mapMutations(["setPlayingState", "setCurrentTime"]),
-    // ...mapActions(["startSong"]),
-    /** @param {boolean} state */
-    setPlayingState(state) {
-      this.curPlayStatus = state ? "playing" : "paused";
-    },
-    initAudioRef() {
-      this.audio.addEventListener('canplay', this.ready);
-      this.audio.addEventListener('ended', this.end);
-    },
-    ready() {
-      this.songReady = true;
-    },
     end() {
       this.getSong();
     },
     async play() {
       if (this.songReady) {
         try {
-          // await
-          this.audio.play();
-        } catch (error) {
-          this.setPlayingState(false);
+          await comp.audioPlay();
+          this.onLoadAudio();
+        } catch (err) {
+          console.log(err);
+          this.curPlayStatus = "paused";
         }
       }
     },
     pause() {
-      this.audio.pause();
-      this.setPlayingState(false);
+      comp.audioPause();
     },
     /** @param {Event} e */
     progressJump(e) {
@@ -276,11 +257,15 @@ export default {
       if(!this.totalTime) return;
       const bar = this.$refs.progressBarRef;
       const percent = e.offsetX / bar.offsetWidth;
-      console.log(percent, e.offsetX, bar.offsetWidth);
+      this.audio.currentTime = percent * this.totalTime;
       this.currentTime = percent * this.totalTime;
     },
     onClickSong() {
-      this.setPlayingState(!this.playing);
+      if(this.curPlayStatus === "paused") {
+        this.play();
+      } else {
+        this.pause();
+      }
     },
     getSong() {
       const { name, cover, artist, lrc } = this.curAudio;
@@ -322,25 +307,8 @@ export default {
       }
     },
     onLoadAudio() {
-      // debugger
-      if (!this.contextAudio) {
-        // 创建AudioContext，关联音频输入，进行解码、控制音频播放和暂停
-        this.contextAudio = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (!this.analyserAudio) {
-        // 创建analyser，获取音频的频率数据（FrequencyData）和时域数据（TimeDomainData）
-        this.analyserAudio = this.contextAudio.createAnalyser();
-        // fftSize：快速傅里叶变换，信号样本的窗口大小，区间为32-32768，默认2048
-        this.analyserAudio.fftSize = 512;
-      }
-
-      if (!this.sourceAudio) {
-        // 创建音频源
-        this.sourceAudio = this.contextAudio.createMediaElementSource(this.audio);
-        // 音频源关联到分析器
-        this.sourceAudio.connect(this.analyserAudio);
-        // 分析器关联到输出设备（耳机、扬声器等）
-        this.analyserAudio.connect(this.contextAudio.destination);
+      if(__VUEPRESS_SSR__) {
+        return;
       }
 
       // 获取频率数组
@@ -373,7 +341,7 @@ export default {
         // bufferLength表示柱形图中矩形的个数，当前是128个
         for (let i = 0, x = 0; i < bufferLength; i++) {
           barHeight = dataArray[i];
-          const gradient = ctx.createLinearGradient(0, 0, 0, 250)
+          const gradient = ctx.createLinearGradient(0, 0, 0, 250);
           this.colorPick(gradient, canvasTheme);
           ctx.fillStyle = gradient;
           ctx.fillRect(x, 250 - barHeight, barWidth, barHeight);
@@ -381,6 +349,7 @@ export default {
         }
       }
       renderFrame();
+      this.isRendering = true;
     },
     colorPick(gradient, arr) {
       arr.forEach(item => {
@@ -391,247 +360,7 @@ export default {
   }
 }
 </script>
+
 <style lang="postcss" scoped>
-.music-player {
-  width: 100%;
-  display: flex;
-  justify-content: center;
-  overflow: hidden;
-  font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, "\5FAE\8F6F\96C5\9ED1", Arial, sans-serif !important;
-  position: relative;
-
-  .loading {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 10;
-  }
-
-  .left {
-    display: flex;
-    flex-direction: column;
-    position: relative;
-    padding: 80px 120px 0 15px;
-    justify-content: center;
-
-    .point {
-      position: absolute;
-      left: 180px;
-      top: -12px;
-      width: 30px;
-      height: 30px;
-      z-index: 2;
-    }
-
-    .bar {
-      position: absolute;
-      top: 0;
-      left: 190px;
-      width: 100px;
-      height: 145px;
-      z-index: 1;
-      transform-origin: 0 0;
-      transform: rotate(-30deg);
-      transition: all .3s;
-
-      &.play {
-        transform: rotate(5deg);
-      }
-    }
-
-    .img-outer-container {
-      border-radius: 50%;
-      display: flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      /* background: #E6E5E6; */
-      width: 320px;
-      height: 320px;
-
-      .img-outer {
-        width: 300px;
-        height: 300px;
-        background: #000;
-        background: linear-gradient(-45deg, #333540, #070708, #333540);
-        animation: rotate 20s linear infinite;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: row;
-
-        &.paused {
-          animation-play-state: paused;
-        }
-
-        .img-album {
-          width: 200px;
-          height: 200px;
-          flex-shrink: 0;
-
-          img {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-          }
-        }
-      }
-    }
-
-    .progress-bar-wrap {
-      margin: 40px auto 0px;
-      width: 100%;
-      background: #f1f1f1;
-      position: relative;
-
-      .time {
-        position: absolute;
-        right: 0;
-        bottom: 8px;
-        font-size: 12px;
-        color: #5c5c5c;
-      }
-
-      .progress-bar {
-        background: #D33A31;
-        height: 2px;
-        position: relative;
-        width: 100%;
-        transition: width .2s ease;
-
-        &:after {
-          position: absolute;
-          content: "";
-          display: block;
-          width: 6px;
-          height: 6px;
-          background: #D33A31;
-          border-radius: 50%;
-          top: 1px;
-          right: -1px;
-          transform: translate(0%, -50%);
-        }
-      }
-    }
-
-    .control {
-      padding: 20px 40px 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-
-      div {
-        cursor: pointer;
-      }
-
-      .btn {
-        margin: 0 auto;
-        border-radius: 50%;
-        width: 45px;
-        height: 45px;
-        background: #d33a31;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-      }
-    }
-  }
-
-  .right {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-
-    canvas {
-      height: 50%;
-      z-index: 30;
-    }
-
-    .noLyric {
-      text-align: center;
-    }
-
-    .music-name {
-      font-size: 14px;
-      color: #7e7b7b;
-
-      p:first-child {
-        /* color:#333; */
-        font-size: 22px;
-        /* font-weight: */
-        margin-bottom: 5px;
-        ;
-      }
-    }
-
-    .scroller {
-      position: relative;
-      overflow: hidden;
-
-      &.lyric-wrap {
-        width: 350px;
-        height: 350px;
-        mask-image: linear-gradient(180deg, hsla(0, 0%, 100%, 0), hsla(0, 0%, 100%, .6) 15%, #fff 25%, #fff 75%, hsla(0, 0%, 100%, .6) 85%, hsla(0, 0%, 100%, 0));
-
-        .lyric-item {
-          margin-bottom: 16px;
-          font-size: 14px;
-
-          &.active {
-            font-size: 16px;
-            font-weight: bold
-          }
-        }
-      }
-    }
-  }
-}
-
-@keyframes rotate {
-  0% {
-    transform: rotate(0);
-  }
-
-  100% {
-    transform: rotate(1turn);
-  }
-}
-
-.clickable {
-  cursor: pointer;
-
-  &:hover, &:active {
-    filter: drop-shadow(0 0 0.2em rgb(255 255 255 / .2)) drop-shadow(0 0 0.2em rgb(255 255 255 / .2))
-  }
-}
-
-.lyric-item.active {
-  color: #333 !important;
-  ;
-}
-
-.music-name {
-  p:first-child {
-    color: #333
-  }
-}
-
-.dark {
-  .lyric-item.active {
-    color: white !important;
-    ;
-  }
-
-  .music-name {
-    p:first-child {
-      color: #fefefe
-    }
-  }
-}
+@import "./MusicPlayer.css";
 </style>

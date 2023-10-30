@@ -4,9 +4,7 @@
     <audio id="bgm"
       :src="curAudio.url"
       ref="bgm"
-      @canplay="playReady"
       @ended="bgmEnded"
-      @timeupdate="timeUpdate"
       crossorigin="anonymous"
     />
     <module-transition :position="floatPosition">
@@ -45,8 +43,8 @@
           </div>
           <!-- 歌曲进度条 -->
           <div class="reco-bgm-progress">
-            <div class="progress-bar clickable bar" @click="progressJump">
-              <div class="bar" ref="pbar"></div>
+            <div class="progress-bar clickable bar" ref="pbar" @click="progressJump">
+              <div class="bar" :style="{ width: progress }"></div>
             </div>
           </div>
           <!-- 歌曲操作栏 -->
@@ -57,8 +55,8 @@
             <i class="reco-bgm reco-bgm-next next clickable" @click="playNext"></i>
             <i v-if="isMute" @click="unMuteBgm" class="reco-bgm reco-bgm-mute mute clickable"></i>
             <i v-else @click="muteBgm" class="reco-bgm reco-bgm-volume1 volume clickable"></i>
-            <div class="volume-bar clickable bar" @click="volumeJump">
-              <div class="bar" ref="vbar"></div>
+            <div class="volume-bar clickable bar" ref="vbar" @click="volumeJump">
+              <div class="bar" :style="{ width: `${volume * 100}%` }" ></div>
             </div>
           </div>
         </div>
@@ -75,39 +73,33 @@
 </template>
 
 <script>
-import volume from './mixins/volume.js';
 import ModuleTransition from './ModuleTransition.vue';
 import * as comp from "./composables";
 
 export default {
-  mixins: [volume],
   components: {
     ModuleTransition,
   },
   data() {
-    const audioRef = comp.useAudioRef();
-    const audiolist = comp.useAudioList();
-    const curIndex = comp.useCurIndex();
-    const curPlayStatus = comp.useCurPlayStatus();
-    const curAudio = comp.useCurAudio();
     return {
-      curIndex,
-      curPlayStatus,
-      curAudio,
-      audioRef,
-      audiolist,
+      curIndex: comp.useCurIndex(),
+      curPlayStatus: comp.useCurPlayStatus(),
+      curAudio: comp.useCurAudio(),
+      audioRef: comp.useAudioRef(),
+      audiolist: comp.useAudioList(),
+      volume: comp.useVolume(),
+      isMute: comp.useMute(),
+      currentTime: 0,
+      totalTime: 0,
       /** @type {string} */
       defaultCover: __DEFAULT_COVER__,
       /** @type {import("../index").PositionOptions} */
       panelPosition: __INIT_POSITION__,
       /** @type {boolean} */
-      autoplay: __AUTOPLAY__,
-      /** @type {boolean} */
       draggable: __DRAGGABLE__,
       isFloat: false,
       isMini: false,
       firstLoad: true,
-      isMute: false,
       isFault: false,
       /** @type {"left" | "right"} */
       floatPosition: __FLOAT_POSITION__,
@@ -117,7 +109,6 @@ export default {
       autoShrink: __AUTO_SHRINK__,
       /** @type {"mini" | "float"} */
       shrinkMode: __SHRINK_MODE__,
-
       initPos: true,
       dragging: false,
       align: { x: "left", y: "bottom" }, // 记录播放器的对齐状态
@@ -146,6 +137,12 @@ export default {
         bottom: alignY === "bottom" ? `${this.posY}px` : null,
         "z-index": this.panelPosition["z-index"]
       }
+    },
+    // 更新歌曲进度条
+    progress() {
+      return this.totalTime
+        ? Math.ceil(this.currentTime / this.totalTime * 100) + '%'
+        : '0%';
     }
   },
   mounted() {
@@ -164,6 +161,11 @@ export default {
         'border-bottom-left-radius': '20px'
       }
     }
+
+    comp.registerTimeupdate(e => {
+      this.currentTime = e.target.currentTime;
+      this.totalTime = e.target.duration;
+    });
 
     this.isMini = this.isMobile();
     // autoShrink为true时隐藏歌曲信息
@@ -218,142 +220,74 @@ export default {
         this.isMini = bool;
       }
     },
-    // audio canplay回调事件
-    playReady() {
-      // 第一次加载时初始化音量条并处理自动播放事件
-      if (this.firstLoad) {
-        if (this.getVolume()) {
-          const percent = this.getVolume()
-          this.$refs.vbar.style.width = percent * 100 + '%'
-          this.$refs.bgm.volume = percent
-        } else {
-          const vbar_width = this.$refs.bgm.volume * 100 + '%'
-          this.$refs.vbar.style.width = vbar_width
-        }
-        this.firstLoad = false
-        // 自动播放的处理
-        if (this.autoplay) {
-          this.tryAutoPlay();
-        }
-      }
-      // 播放状态下歌曲准备完成立即播放
-      if (this.curPlayStatus === 'playing') {
-        this.playBgm()
-      }
-    },
-    tryAutoPlay() {
-      let tryCount = 0;
-      const playPromise = this.$refs.bgm.play()
-      if(!playPromise) return;
-      const tryPlay = async () => {
-        try {
-          await playPromise;
-          console.log('bgm-player: 自动播放成功');
-          this.curPlayStatus = 'playing';
-        } catch (e) {
-          console.log('bgm-player: 自动播放失败，尝试第', ++tryCount, '次');
-          // 用定时器尝试播放3次，如果3次后失败，则监听用户点击事件实现自动播放
-          const handleClick = () => {
-            this.playBgm();
-            window.removeEventListener('click', handleClick);
-          }
-          tryCount < 3 ? setTimeout(tryPlay, 1000)
-            : window.addEventListener("click", handleClick);
-        }
-      }
-      tryPlay();
-    },
     // 暂停
     pauseBgm() {
-      this.$refs.bgm.pause()
-      this.curPlayStatus = 'paused'
+      comp.audioPause();
     },
     // 播放
-    playBgm() {
-      const playPromise = this.$refs.bgm.play()
-      if (playPromise !== void 0) {
-        playPromise.then(res => {
-          if (this.isFault) {
-            this.isFault = false
-          }
-          this.curPlayStatus = 'playing'
-          // eslint-disable-next-line handle-callback-err
-        }).catch(err => {
-          console.log(err)
-          // 播放异常时显示播放失败并暂停播放
-          this.isFault = true
-          this.pauseBgm()
-        })
+    async playBgm() {
+      try {
+        await comp.audioPlay();
+        if (this.isFault) {
+          this.isFault = false;
+        }
+        // eslint-disable-next-line handle-callback-err
+      } catch (err) {
+        console.log(err);
+        // 播放异常时显示播放失败并暂停播放
+        this.isFault = true;
+        this.pauseBgm();
       }
     },
     // 播放下一首
     playNext() {
-      this.$refs.pbar.style.width = 0
-      this.isFault = false
+      this.currentTime = 0;
+      this.isFault = false;
       if (this.curIndex >= this.audiolist.length - 1) {
-        this.curIndex = 0
+        this.curIndex = 0;
       } else {
-        this.curIndex++
+        this.curIndex++;
       }
     },
     // 播放上一首
     playLast() {
-      this.$refs.pbar.style.width = 0
-      this.isFault = false
+      this.currentTime = 0;
+      this.isFault = false;
       if (this.curIndex <= 0) {
-        this.curIndex = this.audiolist.length - 1
+        this.curIndex = this.audiolist.length - 1;
       } else {
-        this.curIndex--
+        this.curIndex--;
       }
     },
     // bgm结束时自动下一首
     bgmEnded() {
-      this.$refs.pbar.style.width = 0
-      this.playNext()
-    },
-    // 更新歌曲进度条
-    timeUpdate() {
-      const total_time = this.$refs.bgm.duration
-      const cur_time = this.$refs.bgm.currentTime
-      const bar_width = cur_time / total_time * 100 + '%'
-      this.$refs.pbar.style.width = bar_width
+      this.currentTime = 0;
+      this.playNext();
     },
     // 点击进度条跳播
     progressJump(e) {
-      const total_time = this.$refs.bgm.duration
-      const percent = e.offsetX / 150
       // 歌曲未加载完成时点击进度条的错误处理
-      if (isNaN(total_time)) return
-      this.$refs.bgm.currentTime = percent * total_time
+      if (!this.totalTime) return;
+      const percent = e.offsetX / this.$refs.pbar.offsetWidth;
+      this.audioRef.currentTime = this.totalTime * percent;
+      this.currentTime = this.totalTime * percent;
     },
     // 点击音量条修改音量
     volumeJump(e) {
-      const percent = e.offsetX / 57
+      const percent = e.offsetX / this.$refs.vbar.offsetWidth;
       if (percent >= 0 && percent <= 1) {
-        this.isMute = !(percent > 0)
-        this.$refs.vbar.style.width = percent * 100 + '%'
-        this.$refs.bgm.volume = percent
-        this.setVolume(this.$refs.bgm.volume)
+        this.isMute = !(percent > 0);
+        this.volume = percent;
       }
     },
     // 静音
     muteBgm() {
-      this.isMute = true
-      this.setVolume(this.$refs.bgm.volume)
-      this.$refs.vbar.style.width = 0
-      this.$refs.bgm.volume = 0
+      this.isMute = true;
     },
     // 取消静音
     unMuteBgm() {
-      this.isMute = false
-      if (this.getVolume()) {
-        const percent = this.getVolume()
-        this.$refs.vbar.style.width = percent * 100 + '%'
-        this.$refs.bgm.volume = percent
-      } else {
-        this.$refs.vbar.style.width = '100%'
-        this.$refs.bgm.volume = 1
-      }
+      this.isMute = false;
+      const percent = this.volume;
     }
   }
 }
