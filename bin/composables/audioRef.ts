@@ -4,23 +4,26 @@ import { throttle } from "./throttle";
 declare const __VUEPRESS_SSR__: boolean;
 declare const __AUTOPLAY__: boolean;
 const VOLUME_KEY = "reco-bgm-volume";
-type CallbackFunc = (e: Event) => void;
+export type EventFunc = (e: Event) => void;
+export type PlayStatus = "playing" | "pending" | "paused";
 
 const audioRef = ref<HTMLAudioElement | null>(null);
-const curPlayStatus = ref<"playing" | "paused">("paused");
+const curPlayStatus = ref<PlayStatus>("paused");
 const playPromise = ref<Promise<void> | null>(null);
-const volume = __VUEPRESS_SSR__ ? ref(0) : ref(Number(localStorage.getItem(VOLUME_KEY) ?? "0.5"));
+const volume = ref(0);
 const mute = ref(false);
 const audioContext = ref<AudioContext | null>(null);
 const analyserAudio = ref<AnalyserNode | null>(null);
 const sourceAudio = ref<MediaElementAudioSourceNode | null>(null);
 
 const canplay = ref(false);
-const timeUpdateHooks: CallbackFunc[] = [];
-const endedHooks: CallbackFunc[] = [];
+const canplayHooks = ref<EventFunc[]>([]);
+const timeupdateHooks = ref<EventFunc[]>([]);
+const endedHooks = ref<EventFunc[]>([]);
 
 if (!__VUEPRESS_SSR__) {
   let firstLoad = false;
+  volume.value = Number(localStorage.getItem(VOLUME_KEY) ?? "0.5");
   const stopWatch = watch(audioRef, (audio) => {
     if (audio === null) {
       return;
@@ -31,8 +34,9 @@ if (!__VUEPRESS_SSR__) {
     if (isIOS) {
       audio.load();
     }
-    audio.addEventListener("canplay", () => {
+    audio.addEventListener("canplay", (e) => {
       canplay.value = true;
+      canplayHooks.value.forEach((f) => f(e));
       if (firstLoad && __AUTOPLAY__) {
         tryAutoPlay();
         firstLoad = false;
@@ -43,10 +47,10 @@ if (!__VUEPRESS_SSR__) {
       }
     });
     audio.addEventListener("ended", (e) =>
-      endedHooks.forEach((f) => f(e))
+      endedHooks.value.forEach((f) => f(e))
     );
     audio.addEventListener("timeupdate", (e) =>
-      timeUpdateHooks.forEach((f) => f(e))
+      timeupdateHooks.value.forEach((f) => f(e))
     );
 
     // @ts-ignore
@@ -102,6 +106,7 @@ export const audioPlay = async () => {
     return;
   }
   playPromise.value = audioRef.value.play();
+  curPlayStatus.value = "pending";
   await playPromise.value;
   curPlayStatus.value = "playing";
   playPromise.value = null;
@@ -115,11 +120,14 @@ export const audioPause = () => {
   audioRef.value.pause();
 };
 
-export const registerTimeupdate = (cb: CallbackFunc) => {
-  timeUpdateHooks.push(throttle(cb, 500));
+export const registerCanplay = (cb: EventFunc) => {
+  canplayHooks.value.push(cb);
 }
-export const registerEnded = (cb: CallbackFunc) => {
-  endedHooks.push(cb);
+export const registerTimeupdate = (cb: EventFunc) => {
+  timeupdateHooks.value.push(throttle(cb, 500));
+}
+export const registerEnded = (cb: EventFunc) => {
+  endedHooks.value.push(cb);
 }
 export const useAudioRef = () => audioRef;
 export const useCurPlayStatus = () => curPlayStatus;

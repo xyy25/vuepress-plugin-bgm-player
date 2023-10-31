@@ -23,7 +23,7 @@
             <i v-else-if="curPlayStatus === 'paused'" @click.stop="playBgm" class="reco-bgm reco-bgm-play clickable"></i>
           </div>
           <!-- 错误信息显示 -->
-          <div v-if="isFault" class="falut-message">
+          <div v-if="isFault" class="fault-message">
             播放失败
           </div>
         </div>
@@ -145,6 +145,7 @@ export default {
     }
   },
   mounted() {
+    this.audioRef = this.$refs.bgm;
     if (this.floatPosition === 'left') {
       this.floatStyle = {
         ...this.floatStyle,
@@ -177,7 +178,6 @@ export default {
     this.posX = this.align.x === "left" ? left : right;
     this.posY = this.align.y === "top" ? top : bottom;
     this.initPos = false;
-    this.audioRef = this.$refs.bgm;
   },
   methods: {
     /** @param { MouseEvent } oe */
@@ -278,7 +278,6 @@ export default {
     // 取消静音
     unMuteBgm() {
       this.isMute = false;
-      const percent = this.volume;
     }
   }
 }

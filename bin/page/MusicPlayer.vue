@@ -34,8 +34,7 @@
               p-id="1139" fill="#ffffff"></path>
           </svg>
         </div>
-        <!-- <div class="btn share" v-copy="href" title="分享"> -->
-        <div class="btn share" title="分享">
+        <div class="btn share" v-copy="href" title="分享">
           <svg t="1640253998462" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg"
             p-id="2826" width="15" height="15">
             <path
@@ -268,11 +267,12 @@ export default {
       }
     },
     getSong() {
-      const { name, cover, artist, lrc } = this.curAudio;
+      const { name, cover, artist, lrc, url } = this.curAudio;
       this.title = name;
       this.signer = artist;
       this.albumImg = cover && cover.replace("250y250", "400y400") || "";
       this.albumName = "歌单名" || "";
+      this.href = url;
       fetch(lrc)
         .then(res => res.text())
         .then(txt => lyricParser(txt).lyric)
