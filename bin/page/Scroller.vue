@@ -11,8 +11,6 @@
 import BScroll from "@better-scroll/core";
 import ScrollBar from "@better-scroll/scroll-bar";
 import MouseWheel from "@better-scroll/mouse-wheel";
-BScroll.use(ScrollBar);
-BScroll.use(MouseWheel);
 
 const defaultOptions = {
   mouseWheel: true,
@@ -33,6 +31,13 @@ export default {
   },
   data() {
     return {}
+  },
+  created() {
+    if(__VUEPRESS_SSR__) {
+      return;
+    }
+    BScroll.use(ScrollBar);
+    BScroll.use(MouseWheel);
   },
   methods: {
     getScroller() {

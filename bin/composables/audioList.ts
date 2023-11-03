@@ -89,9 +89,16 @@ function resolveAudios(requiredAudio: RequiredAudio[]): ResolvedAudios {
   };
 }
 
-const audioList = ref<Audio[]>([{ name: '音乐加载中..', artist: '', url: '', cover: __DEFAULT_COVER__ }]);
+const newAudio = (name: string = ""): Audio => ({
+  name,
+  artist: '',
+  url: '',
+  cover: __DEFAULT_COVER__
+});
+
+const audioList = ref<Audio[]>([newAudio('音乐加载中..')]);
 const curIndex = ref(0);
-const curAudio = computed(() => audioList.value[curIndex.value]);
+const curAudio = computed(() => audioList.value[curIndex.value] || newAudio('音乐不存在'));
 const httpEnd = ref(false);
 
 const { audios, asyncAudios } = resolveAudios(__AUDIOS__);
