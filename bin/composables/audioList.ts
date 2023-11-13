@@ -95,10 +95,11 @@ const newAudio = (name: string = ""): Audio => ({
   url: '',
   cover: __DEFAULT_COVER__
 });
+const holderAudio = newAudio('音乐加载中..');
 
-const audioList = ref<Audio[]>([newAudio('音乐加载中..')]);
+const audioList = ref<Audio[]>([holderAudio]);
 const curIndex = ref(0);
-const curAudio = computed(() => audioList.value[curIndex.value] || newAudio('音乐不存在'));
+const curAudio = computed(() => audioList.value[curIndex.value] || holderAudio);
 const httpEnd = ref(false);
 
 const { audios, asyncAudios } = resolveAudios(__AUDIOS__);
