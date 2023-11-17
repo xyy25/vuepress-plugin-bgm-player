@@ -178,6 +178,17 @@ export default {
     this.posX = this.align.x === "left" ? left : right;
     this.posY = this.align.y === "top" ? top : bottom;
     this.initPos = false;
+
+    if(!__VUEPRESS_SSR__) {
+      document.addEventListener("bgmplay", this.playBgm);
+      document.addEventListener("bgmpause", this.pauseBgm);
+    }
+  },
+  unmounted() {
+    if(!__VUEPRESS_SSR__) {
+      document.removeEventListener("bgmplay", this.playBgm);
+      document.removeEventListener("bgmpause", this.pauseBgm);
+    }
   },
   methods: {
     /** @param { MouseEvent } oe */
