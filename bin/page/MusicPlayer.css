@@ -1,6 +1,6 @@
 .music-player {
   max-width: 100vw;
-  height: 100vh;
+  height: calc(100vh - 4rem);
   margin-left: 5%;
   padding-right: 5%;
   display: flex;
@@ -14,6 +14,7 @@
   @media (max-width: 800px) {
     flex-direction: column;
     overflow: auto;
+    justify-content: start;
   }
 
   .loading {
@@ -164,58 +165,48 @@
 
   .right {
     flex: 3;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
 
-    canvas {
-      height: 50%;
-      z-index: 30;
+    &:has(.panel canvas) {
+      flex-direction: column;
     }
 
-    .noLyric {
-      text-align: center;
-    }
+    .panel {
 
-    .lyric-container {
-      height: 60vh;
-    }
-
-    .music-name {
-      font-size: 14px;
-      color: #7e7b7b;
-
-      p:first-child {
-        /* color:#333; */
-        font-size: 22px;
-        /* font-weight: */
-        margin-bottom: 5px;
-        ;
+      canvas {
+        height: 100%;
+        z-index: 30;
       }
     }
 
-    .scroller {
-      position: relative;
-      overflow: hidden;
+    .panel:has(canvas) ~ .list {
+      height: 250px;
 
-      &.lyric-wrap {
-        width: 350px;
-        height: 350px;
-        mask-image: linear-gradient(180deg, hsla(0, 0%, 100%, 0), hsla(0, 0%, 100%, .6) 15%, #fff 25%, #fff 75%, hsla(0, 0%, 100%, .6) 85%, hsla(0, 0%, 100%, 0));
+      @media (max-width: 800px) {
+        height: auto;
+        overflow: hidden;
+      }
+    }
 
-        .lyric-item {
-          margin-bottom: 16px;
-          font-size: 14px;
+    .list {
+      container: bgm-music-list / inline-size;
+      margin-top: 4rem;
+      overflow: auto;
 
-          &.active {
-            font-size: 16px;
-            font-weight: bold
-          }
-        }
+      height: 75vh;
+
+      @media (max-width: 800px) {
+        height: auto;
+        overflow: hidden;
       }
     }
   }
+
+
 }
 
 @keyframes rotate {

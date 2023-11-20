@@ -4,7 +4,7 @@
     @enter="setStyle"
     @after-enter="unsetStyle"
     @before-leave="setStyle"
-    @after-leave="unsetTransform">
+    @after-leave="">
     <slot />
   </transition>
 </template>

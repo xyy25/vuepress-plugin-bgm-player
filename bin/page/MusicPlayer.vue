@@ -60,22 +60,17 @@
       </div>
     </div>
     <div class="right">
-      <canvas ref="audioCanvas" v-if="!panelIsLyric" :style="{ transition: 'all .2s ease-in-out' }"></canvas>
-      <div class="lyric-container" v-else :style="{ transition: 'all .2s ease-in-out' }">
-        <div class="music-name">
-          <p>{{ title }}</p>
-          <p>歌手：{{ signer }}&emsp;&emsp;专辑：{{ albumName }}</p>
-        </div>
-        <p v-if="nolyric" class="noLyric">还没有歌词哦~</p>
-        <Scroller :data="lyric" :options="{ disableTouch: true }" @init="onInitScroller" class="lyric-wrap" ref="scroller"
-          v-else>
-          <div>
-            <div :class="{ active: activeLyricIndex === index }" :key="index" class="lyric-item" ref="lyric"
-              v-for="(l, index) in lyricWithTranslation">
-              <p :key="contentIndex" class="lyric-text" v-for="(content, contentIndex) in l.contents">{{ content }}</p>
-            </div>
-          </div>
-        </Scroller>
+      <div class="panel">
+        <MusicPanel ref="musicPanelRef"
+          :show-lyric="panelIsLyric"
+          :audio="curAudio"
+          :theme="theme"
+          :current-time="currentTime"
+          :total-time="totalTime"
+        />
+      </div>
+      <div class="list">
+        <MusicList :audio-list="audiolist"/>
       </div>
     </div>
     <!-- <audio id="bgm"
@@ -92,22 +87,21 @@
 <script>
 import Scroller from "./Scroller.vue";
 import Loading from "./Loading.vue";
-import { formatTime, audioTheme, lyricParser } from './utils';
+import { formatTime } from "./utils";
 import albumImg from "../assets/img/album.jpg?url";
 import * as comp from "../composables";
+import MusicPanel from "./MusicPanel.vue";
+import MusicList from "./MusicList.vue";
 // import { getSongDetail } from '../api';
 // import { mapState, mapMutations, mapActions } from "../store/helper/music";
-
-const WHEEL_TYPE = "wheel";
-const SCROLL_TYPE = "scroll";
-// 恢复自动滚动的定时器时间
-const AUTO_SCROLL_RECOVER_TIME = 1000;
 
 export default {
   components: {
     Scroller,
-    Loading
-  },
+    Loading,
+    MusicPanel,
+    MusicList,
+},
   data() {
     return {
       audio: comp.useAudioRef(),
@@ -117,19 +111,12 @@ export default {
       curPlayStatus: comp.useCurPlayStatus(),
       httpEnd: comp.useHttpEnd(),
       songReady: comp.useCanplay(),
-      analyserAudio: comp.useAnalyserAudio(),
       formatTime,
       currentTime: 0,
       totalTime: 0,
       isLoading: true,
-      isRendering: false,
       href: '',
       albumImg,
-      nolyric: false,
-      lyric: [],
-      title: '',
-      albumName: '',
-      signer: '',
       panelIsLyric: false,
     }
   },
@@ -138,16 +125,6 @@ export default {
       type: [String, Array],
       default: "apple"
     },
-  },
-  created() {
-    this.lyricScrolling = {
-      [WHEEL_TYPE]: false,
-      [SCROLL_TYPE]: false
-    }
-    this.lyricTimer = {
-      [WHEEL_TYPE]: null,
-      [SCROLL_TYPE]: null
-    }
   },
   mounted() {
     this.isLoading = !(this.songReady && this.httpEnd);
@@ -162,25 +139,16 @@ export default {
     this.href = window.location.href;
     this.getSong();
     if(this.songReady) {
-      this.onLoadAudio();
+      this.$refs.musicPanelRef.onLoadAudio();
     }
   },
   watch: {
-    activeLyricIndex(newIndex, oldIndex) {
-      if (
-        newIndex !== oldIndex &&
-        !this.lyricScrolling[WHEEL_TYPE] &&
-        !this.lyricScrolling[SCROLL_TYPE]
-      ) {
-        this.scrollToActiveLyric();
-      }
-    },
     curAudio() {
       this.getSong();
     },
     curPlayStatus(n) {
       if(n === "playing" && !this.isRendering) {
-        this.onLoadAudio();
+        this.$refs.musicPanelRef.onLoadAudio();
       }
     },
     songReady(n) {
@@ -193,38 +161,6 @@ export default {
   computed: {
     playing() {
       return this.curPlayStatus === "playing";
-    },
-    activeLyricIndex() {
-      let temp = this.lyricWithTranslation
-        ? this.lyricWithTranslation.findIndex((l, index) => {
-          const nextLyric = this.lyricWithTranslation[index + 1]
-          return (
-            this.currentTime >= l.time &&
-            (nextLyric ? this.currentTime < nextLyric.time : true)
-          )
-        })
-        : -1
-      return temp;
-    },
-    lyricWithTranslation() {
-      let ret = [];
-      // 空内容的去除
-      const lyricFiltered = this.lyric.filter(({ content }) => Boolean(content));
-      // content统一转换数组形式
-      if (lyricFiltered.length) {
-        lyricFiltered.forEach(l => {
-          const { time, content } = l
-          const lyricItem = { time, content, contents: [content] }
-          ret.push(lyricItem);
-        })
-      } else {
-        ret = lyricFiltered.map(({ time, content }) => ({
-          time,
-          content,
-          contents: [content]
-        }));
-      }
-      return ret;
     },
     progress() {
       return this.totalTime
@@ -240,7 +176,7 @@ export default {
       if (this.songReady) {
         try {
           await comp.audioPlay();
-          this.onLoadAudio();
+          this.$refs.musicPanelRef.onLoadAudio();
         } catch (err) {
           console.log(err);
           this.curPlayStatus = "paused";
@@ -273,89 +209,7 @@ export default {
       this.albumImg = cover && cover.replace("250y250", "400y400") || "";
       this.albumName = "歌单名" || "";
       this.href = url;
-      fetch(lrc)
-        .then(res => res.text())
-        .then(txt => lyricParser(txt).lyric)
-        .then(lyric => this.lyric = lyric);
     },
-    clearTimer(type) {
-      this.lyricTimer[type] && clearTimeout(this.lyricTimer[type]);
-    },
-    // getActiveCls(index) {
-    //   return this.activeLyricIndex === index ? "active" : ""
-    // },
-    onInitScroller(scoller) {
-      const onScrollStart = type => {
-        this.clearTimer(type);
-        this.lyricScrolling[type] = true;
-      }
-      const onScrollEnd = type => {
-        // 滚动结束后两秒 歌词开始自动滚动
-        this.clearTimer(type);
-        this.lyricTimer[type] = setTimeout(() => {
-          this.lyricScrolling[type] = false;
-        }, AUTO_SCROLL_RECOVER_TIME);
-      }
-      scoller.on("scrollStart", onScrollStart.bind(null, SCROLL_TYPE));
-      scoller.on("scrollEnd", onScrollEnd.bind(null, SCROLL_TYPE));
-    },
-    scrollToActiveLyric() {
-      if (this.activeLyricIndex !== -1) {
-        const { scroller, lyric } = this.$refs;
-        if (lyric && lyric[this.activeLyricIndex]) {
-          scroller
-            .getScroller()
-            .scrollToElement(lyric[this.activeLyricIndex], 200, 0, true);
-        }
-      }
-    },
-    onLoadAudio() {
-      // 获取频率数组
-      const bufferLength = this.analyserAudio.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-
-      const renderFrame = () => {
-        requestAnimationFrame(renderFrame);
-        /** @type {HTMLCanvasElement | null} */
-        const canvas = this.$refs.audioCanvas;
-        if(!canvas) return;
-
-        [canvas.width, canvas.height] = [435, 250];
-        const ctx = canvas.getContext("2d");
-        const [WIDTH, HEIGHT] = [canvas.width, canvas.height];
-
-        const barWidth = WIDTH / bufferLength;
-        let barHeight;
-        // 主题色
-        let canvasTheme;
-        if (typeof this.theme === "string") {
-          canvasTheme = audioTheme[this.theme]
-        } else {
-          canvasTheme = this.theme;
-        }
-
-        // 将当前频率数据复制到传入的Uint8Array，更新频率数据
-        this.analyserAudio.getByteFrequencyData(dataArray);
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-        // bufferLength表示柱形图中矩形的个数，当前是128个
-        for (let i = 0, x = 0; i < bufferLength; i++) {
-          barHeight = dataArray[i];
-          const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-          this.colorPick(gradient, canvasTheme);
-          ctx.fillStyle = gradient;
-          ctx.fillRect(x, 250 - barHeight, barWidth, barHeight);
-          x += barWidth + 2;
-        }
-      }
-      renderFrame();
-      this.isRendering = true;
-    },
-    colorPick(gradient, arr) {
-      arr.forEach(item => {
-        const { pos, color } = item;
-        gradient.addColorStop(pos, color);
-      })
-    }
   }
 }
 </script>

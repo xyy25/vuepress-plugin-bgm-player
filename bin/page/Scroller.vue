@@ -22,6 +22,7 @@ export default {
   name: "Scroller",
   props: {
     data: {
+      type: Array,
       default: () => []
     },
     options: {

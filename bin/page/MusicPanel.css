@@ -1,0 +1,41 @@
+.noLyric {
+  text-align: center;
+}
+
+.lyric-container {
+  height: 60vh;
+}
+
+.music-name {
+  font-size: 14px;
+  color: #7e7b7b;
+
+  p:first-child {
+    /* color:#333; */
+    font-size: 22px;
+    /* font-weight: */
+    margin-bottom: 5px;
+    ;
+  }
+}
+
+.scroller {
+  position: relative;
+  overflow: hidden;
+
+  &.lyric-wrap {
+    width: 350px;
+    height: 350px;
+    mask-image: linear-gradient(180deg, hsla(0, 0%, 100%, 0), hsla(0, 0%, 100%, .6) 15%, #fff 25%, #fff 75%, hsla(0, 0%, 100%, .6) 85%, hsla(0, 0%, 100%, 0));
+
+    .lyric-item {
+      margin-bottom: 16px;
+      font-size: 14px;
+
+      &.active {
+        font-size: 16px;
+        font-weight: bold
+      }
+    }
+  }
+}
