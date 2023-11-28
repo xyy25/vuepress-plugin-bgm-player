@@ -16,14 +16,23 @@ export interface Audio {
   cover?: string,
 }
 
-export type RequiredAudio = Audio | {
+export type RequiredAudio = Audio | LocalAudio | RemoteAudio;
+
+export interface LocalAudio {
   type: "dir"
   url: string
-} | {
+}
+
+export interface RemoteAudio {
   type: "remote"
   api: string,
   from: "netease",
-  mid: string
+  mid: string,
+  replaceUrl?: Record<string, AudioReplace>,
+}
+
+export interface AudioReplace {
+  url: string,
 }
 
 export interface BgPlayerOptions {

@@ -10,14 +10,6 @@ export interface ResolvedAudios {
   asyncAudios: Promise<Audio[]>[];
 }
 
-const mapFunc = (obj: any): Audio => ({
-  name: obj.name || obj.title || '未知歌曲',
-  artist: obj.artist || obj.author || '未知歌手',
-  url: obj.url || obj.src,
-  cover: obj.pic,
-  lrc: obj.lrc || obj.lyric || '',
-});
-
 function resolveAudios(requiredAudio: RequiredAudio[]): ResolvedAudios {
   let files: Record<string, string> | null = null;
   let covers: Record<string, string> | null = null;
@@ -63,6 +55,17 @@ function resolveAudios(requiredAudio: RequiredAudio[]): ResolvedAudios {
           id: e.mid,
           r: Math.random(),
         }
+        const mapFunc = (obj: any): Audio => {
+          const name = obj.name || obj.title || '未知歌曲';
+          const url = e.replaceUrl?.[name]?.url || obj.url || obj.src;
+
+          return {
+            name, url,
+            artist: obj.artist || obj.author || '未知歌手',
+            cover: obj.pic,
+            lrc: obj.lrc || obj.lyric || '',
+          }
+        };
 
         let url = e.api, paramsArr: string[] = [];
         Object.keys(params).forEach((key) => paramsArr.push(key + '=' + params[key]));
@@ -89,13 +92,12 @@ function resolveAudios(requiredAudio: RequiredAudio[]): ResolvedAudios {
   };
 }
 
-const newAudio = (name: string = ""): Audio => ({
-  name,
+const holderAudio: Audio = {
+  name: '音乐加载中...',
   artist: '',
   url: '',
   cover: __DEFAULT_COVER__
-});
-const holderAudio = newAudio('音乐加载中..');
+};
 
 const audioList = ref<Audio[]>([holderAudio]);
 const curIndex = ref(0);
