@@ -20,7 +20,7 @@
           <!-- mini操作栏 -->
           <div v-if="isMini" class="mini-operation">
             <i v-if="curPlayStatus === 'playing'" @click.stop="pauseBgm" class="reco-bgm reco-bgm-pause clickable"></i>
-            <i v-else-if="curPlayStatus === 'paused'" @click.stop="playBgm" class="reco-bgm reco-bgm-play clickable"></i>
+            <i v-else @click.stop="playBgm" class="reco-bgm reco-bgm-play clickable"></i>
           </div>
           <!-- 错误信息显示 -->
           <div v-if="isFault" class="fault-message">
@@ -50,7 +50,7 @@
           <div class="reco-bgm-operation">
             <i class="reco-bgm reco-bgm-last last clickable" @click="playLast"></i>
             <i v-if="curPlayStatus === 'playing'" @click="pauseBgm" class="reco-bgm reco-bgm-pause pause clickable"></i>
-            <i v-else-if="curPlayStatus === 'paused'" ref="play" @click="playBgm" class="reco-bgm reco-bgm-play play clickable"></i>
+            <i v-else ref="play" @click="playBgm" class="reco-bgm reco-bgm-play play clickable"></i>
             <i class="reco-bgm reco-bgm-next next clickable" @click="playNext"></i>
             <i v-if="isMute" @click="unMuteBgm" class="reco-bgm reco-bgm-mute mute clickable"></i>
             <i v-else @click="muteBgm" class="reco-bgm reco-bgm-volume1 volume clickable"></i>
