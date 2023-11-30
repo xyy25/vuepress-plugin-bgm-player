@@ -20,6 +20,12 @@
         <div class="progress-bar" :style="{ width: progress }"></div>
       </div>
       <div class="control">
+        <div class="btn toggle-music" @click="playLast" title="上一首">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
+            <path d="M27,28a1,1,0,0,1-.5-.13l-19-11a1,1,0,0,1,0-1.74l19-11a1,1,0,0,1,1,0A1,1,0,0,1,28,5V27a1,1,0,0,1-1,1ZM10,16l16,9.27V6.73Z" transform="translate(0 0)"/>
+            <rect x="2" y="4" width="2" height="24"/>
+          </svg>
+        </div>
         <div :class="['btn', playing ? 'play' : 'pause']" @click="onClickSong" title="播放/暂停">
           <svg v-show="!playing" t="1640174711530" class="svg" viewBox="0 0 900 1024" version="1.1"
             xmlns="http://www.w3.org/2000/svg" p-id="801" width="20" height="20">
@@ -57,6 +63,12 @@
               p-id="57236" fill="#ffffff"></path>
           </svg>
         </div>
+        <div class="btn toggle-music" @click="playNext" title="下一首">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
+            <path d="M5,28a1,1,0,0,1-1-1V5a1,1,0,0,1,.5-.87,1,1,0,0,1,1,0l19,11a1,1,0,0,1,0,1.74l-19,11A1,1,0,0,1,5,28ZM6,6.73V25.27L22,16Z" transform="translate(0)"/>
+            <rect x="28" y="4" width="2" height="24"/>
+          </svg>
+        </div>
       </div>
     </div>
     <div class="right">
@@ -69,8 +81,14 @@
           :total-time="totalTime"
         />
       </div>
+      <hr />
       <div class="list">
-        <MusicList :audio-list="audiolist"/>
+        <MusicList
+          :audio-list="audiolist"
+          :current-index="curIndex"
+          :play-status="curPlayStatus"
+          @change="playTo"
+        />
       </div>
     </div>
     <!-- <audio id="bgm"
@@ -185,6 +203,23 @@ export default {
     },
     pause() {
       comp.audioPause();
+    },
+    // 播放下一首
+    playNext() {
+      this.currentTime = 0;
+      comp.playNext();
+    },
+    // 播放上一首
+    playLast() {
+      this.currentTime = 0;
+      comp.playLast();
+    },
+    playTo(index) {
+      this.currentTime = 0;
+      comp.playIndex(index);
+      if(this.curPlayStatus !== "playing") {
+        this.play();
+      }
     },
     /** @param {Event} e */
     progressJump(e) {

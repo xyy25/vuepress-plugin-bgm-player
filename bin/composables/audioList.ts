@@ -134,6 +134,10 @@ export const playLast = () => {
     curIndex.value--;
   }
 }
+export const playIndex = (i: number) => {
+  const len = audioList.value.length;
+  curIndex.value = i < 0 ? i % len + len : i % len;
+}
 export const useAudioList = () => audioList;
 export const useCurIndex = () => curIndex;
 export const useCurAudio = () => curAudio;

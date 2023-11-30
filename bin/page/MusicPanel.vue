@@ -1,22 +1,23 @@
 <template>
-  <div class="right">
-    <canvas ref="audioCanvas" v-if="!showLyric" :style="{ transition: 'all .2s ease-in-out' }"></canvas>
-    <div class="lyric-container" v-else :style="{ transition: 'all .2s ease-in-out' }">
-      <div class="music-name">
-        <p>{{ audio.name }}</p>
-        <p>歌手：{{ audio.artist }}&emsp;&emsp;专辑：{{ "专辑名称" }}</p>
-      </div>
-      <p v-if="nolyric" class="noLyric">还没有歌词哦~</p>
-      <Scroller :data="lyric" :options="{ disableTouch: true }" @init="onInitScroller" class="lyric-wrap" ref="scroller"
-        v-else>
-        <div>
-          <div :class="{ active: activeLyricIndex === index }" :key="index" class="lyric-item" ref="lyric"
-            v-for="(l, index) in lyricWithTranslation">
-            <p :key="contentIndex" class="lyric-text" v-for="(content, contentIndex) in l.contents">{{ content }}</p>
-          </div>
-        </div>
-      </Scroller>
+  <canvas ref="audioCanvas" v-if="!showLyric"
+    :class="{ paused: curPlayStatus !== 'playing' }"
+    :style="{ transition: 'all .2s ease-in-out' }">
+  </canvas>
+  <div class="lyric-container" v-else :style="{ transition: 'all .2s ease-in-out' }">
+    <div class="music-name">
+      <p>{{ audio.name }}</p>
+      <p>歌手：{{ audio.artist }}&emsp;&emsp;专辑：{{ "专辑名称" }}</p>
     </div>
+    <p v-if="nolyric" class="noLyric">还没有歌词哦~</p>
+    <Scroller :data="lyric" :options="{ disableTouch: true }" @init="onInitScroller" class="lyric-wrap" ref="scroller"
+      v-else>
+      <div>
+        <div :class="{ active: activeLyricIndex === index }" :key="index" class="lyric-item" ref="lyric"
+          v-for="(l, index) in lyricWithTranslation">
+          <p :key="contentIndex" class="lyric-text" v-for="(content, contentIndex) in l.contents">{{ content }}</p>
+        </div>
+      </div>
+    </Scroller>
   </div>
 </template>
 
@@ -25,7 +26,7 @@ import type { Audio } from '../../index';
 import type { PropType } from 'vue';
 import type BScroll from '@better-scroll/core';
 import { defineComponent } from 'vue';
-import { useAnalyserAudio } from '../composables';
+import { useAnalyserAudio, useCurPlayStatus } from '../composables';
 import { type LRCObject, audioTheme, lyricParser } from './utils';
 import Scroller from './Scroller.vue';
 
@@ -83,6 +84,7 @@ export default defineComponent({
         [SCROLL_TYPE]: null
       },
       analyserAudio: useAnalyserAudio(),
+      curPlayStatus: useCurPlayStatus(),
     }
   },
   watch: {
