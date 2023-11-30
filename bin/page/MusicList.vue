@@ -41,7 +41,7 @@ const emit = defineEmits<{
 .music-list {
   padding: 0 .5rem;
 
-  --bg-color: rgba(235 235 230 / .8);
+  --bg-color: rgba(235 238 238 / .8);
   --bd-color: 85 85 87;
   --color: rgba(22 22 23 / .8);
   --info-color: #666;

@@ -106,7 +106,6 @@
     .progress-bar-wrap {
       margin: 40px auto 0px;
       width: 100%;
-      background: #f1f1f1;
       position: relative;
 
       .time {
@@ -118,23 +117,29 @@
       }
 
       .progress-bar {
-        background: #D33A31;
-        height: 2px;
-        position: relative;
+        background: #f1f1f1;
         width: 100%;
-        transition: width .2s ease;
+        position: relative;
 
-        &:after {
-          position: absolute;
-          content: "";
-          display: block;
-          width: 6px;
-          height: 6px;
+        .progress-bar-enter {
           background: #D33A31;
-          border-radius: 50%;
-          top: 1px;
-          right: -1px;
-          transform: translate(0%, -50%);
+          height: 2px;
+          position: relative;
+          width: 100%;
+          transition: width .2s ease;
+
+          &:after {
+            position: absolute;
+            content: "";
+            display: block;
+            width: 6px;
+            height: 6px;
+            background: #D33A31;
+            border-radius: 50%;
+            top: 1px;
+            right: -1px;
+            transform: translate(0%, -50%);
+          }
         }
       }
     }

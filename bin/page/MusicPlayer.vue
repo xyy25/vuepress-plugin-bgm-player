@@ -15,12 +15,19 @@
           </div>
         </div>
       </div>
-      <div class="progress-bar-wrap clickable" ref="progressBarRef" @click="progressJump">
-        <div class="time">{{ formatTime(currentTime) }} / {{ formatTime(totalTime) }}</div>
-        <div class="progress-bar" :style="{ width: progress }"></div>
+      <div class="progress-bar-wrap">
+        <div class="time clickable" @click="reverseTime = !reverseTime">
+          {{ reverseTime
+            ? `-${formatTime(totalTime - currentTime)}`
+            : formatTime(currentTime)
+          }} / {{ formatTime(totalTime) }}
+        </div>
+        <div class="progress-bar clickable" ref="progressBarRef" @click="progressJump">
+          <div class="progress-bar-enter" :style="{ width: progress }"></div>
+        </div>
       </div>
       <div class="control">
-        <div class="btn toggle-music" @click="playLast" title="上一首">
+        <div class="btn toggle-music clickable" @click="playLast" title="上一首">
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
             <path d="M27,28a1,1,0,0,1-.5-.13l-19-11a1,1,0,0,1,0-1.74l19-11a1,1,0,0,1,1,0A1,1,0,0,1,28,5V27a1,1,0,0,1-1,1ZM10,16l16,9.27V6.73Z" transform="translate(0 0)"/>
             <rect x="2" y="4" width="2" height="24"/>
@@ -63,7 +70,7 @@
               p-id="57236" fill="#ffffff"></path>
           </svg>
         </div>
-        <div class="btn toggle-music" @click="playNext" title="下一首">
+        <div class="btn toggle-music clickable" @click="playNext" title="下一首">
           <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="20" height="20" fill="currentColor">
             <path d="M5,28a1,1,0,0,1-1-1V5a1,1,0,0,1,.5-.87,1,1,0,0,1,1,0l19,11a1,1,0,0,1,0,1.74l-19,11A1,1,0,0,1,5,28ZM6,6.73V25.27L22,16Z" transform="translate(0)"/>
             <rect x="28" y="4" width="2" height="24"/>
@@ -133,6 +140,7 @@ export default {
       currentTime: 0,
       totalTime: 0,
       isLoading: true,
+      reverseTime: false,
       href: '',
       albumImg,
       panelIsLyric: false,
