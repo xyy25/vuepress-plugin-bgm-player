@@ -1,7 +1,7 @@
 
 <template>
   <Common>
-    <MusicPlayer theme="apple" />
+    <MusicPlayer />
   </Common>
 </template>
 

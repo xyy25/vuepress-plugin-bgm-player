@@ -83,7 +83,6 @@
         <MusicPanel ref="musicPanelRef"
           :show-lyric="panelIsLyric"
           :audio="curAudio"
-          :theme="theme"
           :current-time="currentTime"
           :total-time="totalTime"
         />
@@ -145,12 +144,6 @@ export default {
       albumImg,
       panelIsLyric: false,
     }
-  },
-  props: {
-    theme: {
-      type: [String, Array],
-      default: "apple"
-    },
   },
   mounted() {
     this.isLoading = !(this.songReady && this.httpEnd);
