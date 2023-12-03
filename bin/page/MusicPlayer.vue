@@ -230,6 +230,8 @@ export default {
       const percent = e.offsetX / bar.offsetWidth;
       this.audio.currentTime = percent * this.totalTime;
       this.currentTime = percent * this.totalTime;
+      const musicPanelRef = this.$refs.musicPanelRef;
+      setTimeout(() => musicPanelRef.checkAndScroll(), 100);
     },
     onClickSong() {
       if(this.curPlayStatus === "paused") {

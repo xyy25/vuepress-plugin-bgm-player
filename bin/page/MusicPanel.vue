@@ -1,8 +1,8 @@
 <template>
   <div class="canvas-container" v-if="!showLyric">
     <div v-if="curPlayStatus === 'pending'">稍后播放..</div>
-    <div v-else-if="!nolyric" class="lyric"
-    :style="{ transition: 'all .2s ease-in-out' }">
+    <div v-if="!nolyric" v-show="curPlayStatus !== 'pending'"
+      class="lyric" :style="{ transition: 'all .2s ease-in-out' }">
       <Scroller class="lyric-wrap" ref="scroller"
         :data="lyric"
         :options="{ disableTouch: true }"
@@ -107,24 +107,25 @@ export default defineComponent({
       curTheme: <Theme | "custom">(typeof ctx.theme === "string" ? ctx.theme : "custom"),
     }
   },
+  mounted() {
+    if(!__VUEPRESS_SSR__) {
+      this.fetchLrc(this.audio);
+    }
+  },
   watch: {
     activeLyricIndex(newIndex, oldIndex) {
-      if (
-        newIndex !== oldIndex &&
-        !this.lyricScrolling[WHEEL_TYPE] &&
-        !this.lyricScrolling[SCROLL_TYPE]
-      ) {
-        this.scrollToActiveLyric();
+      if (newIndex !== oldIndex) {
+        this.checkAndScroll();
       }
     },
+    showLyric() {
+      setTimeout(() => this.checkAndScroll(), 100);
+    },
     audio(val: Audio) {
-      if(!__VUEPRESS_SSR__ && val.lrc) {
-        fetch(val.lrc)
-          .then(res => res.text())
-          .then(txt => lyricParser(txt).lyric)
-          .then(lyric => this.lyric = lyric);
+      if(!__VUEPRESS_SSR__) {
+        this.fetchLrc(val);
       }
-    }
+    },
   },
   computed: {
     activeLyricIndex() {
@@ -178,6 +179,12 @@ export default defineComponent({
         this.curTheme = toCustom ? "custom" : allThemes[(idx + 1) % len];
       }
     },
+    fetchLrc(audio: Audio) {
+      audio.lrc && fetch(audio.lrc)
+        .then(res => res.text())
+        .then(txt => lyricParser(txt).lyric)
+        .then(lyric => this.lyric = lyric);
+    },
     onInitScroller(scoller: BScroll) {
       const onScrollStart = (type: ScrollType) => {
         this.clearTimer(type);
@@ -192,6 +199,14 @@ export default defineComponent({
       }
       scoller.on("scrollStart", onScrollStart.bind(null, SCROLL_TYPE));
       scoller.on("scrollEnd", onScrollEnd.bind(null, SCROLL_TYPE));
+    },
+    checkAndScroll() {
+      if (
+        !this.lyricScrolling[WHEEL_TYPE] &&
+        !this.lyricScrolling[SCROLL_TYPE]
+      ) {
+        this.scrollToActiveLyric();
+      }
     },
     scrollToActiveLyric() {
       if (this.activeLyricIndex !== -1) {
@@ -223,9 +238,12 @@ export default defineComponent({
       const bufferLength = this.analyserAudio.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
-      let canvas: HTMLCanvasElement;
       const getCanvas = (): [number, number, CanvasRenderingContext2D | null] => {
-        canvas = this.$refs.audioCanvas as HTMLCanvasElement;
+        const canvas = this.$refs.audioCanvas as HTMLCanvasElement | null;
+        if(!canvas) {
+          return [0, 0, null];
+        }
+
         [canvas.width, canvas.height] = [435, 250];
         return [canvas.width, canvas.height, canvas.getContext("2d")];
       }
@@ -233,10 +251,10 @@ export default defineComponent({
       const renderFrame = () => {
         requestAnimationFrame(renderFrame);
         const [WIDTH, HEIGHT, ctx] = getCanvas();
+        if(!ctx) return;
 
         // 将当前频率数据复制到传入的Uint8Array，更新频率数据
         this.analyserAudio?.getByteFrequencyData(dataArray);
-        if(!ctx) return;
         ctx.clearRect(0, 0, WIDTH, HEIGHT);
 
         const barWidth = WIDTH / bufferLength;

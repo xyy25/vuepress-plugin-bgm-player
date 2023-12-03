@@ -1,6 +1,19 @@
 .canvas-container {
   position: relative;
 
+  canvas {
+    z-index: 30;
+    @media (max-width: 800px) {
+      width: 100%;
+      &.paused {
+        display: none;
+      }
+    }
+    @media (max-height: 500px) {
+      height: 50vh;
+    }
+  }
+
   > div {
     position: absolute;
     top: calc(50% - .5em);
