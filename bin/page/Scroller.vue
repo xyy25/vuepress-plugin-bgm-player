@@ -51,6 +51,9 @@ export default {
   watch: {
     data: {
       handler() {
+        if(__VUEPRESS_SSR__) {
+          return;
+        }
         this.$nextTick(() => {
           if (!this.scroller) {
             this.scroller = new BScroll(

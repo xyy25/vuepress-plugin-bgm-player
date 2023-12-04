@@ -43,9 +43,10 @@
 import type { Audio } from '../../index';
 import type { PropType } from 'vue';
 import type BScroll from '@better-scroll/core';
+import type { LRCObject, Theme } from './utils';
 import { defineComponent } from 'vue';
 import { useAnalyserAudio, useCurPlayStatus } from '../composables';
-import { type LRCObject, type Theme, audioTheme, lyricParser } from './utils';
+import { audioTheme, lyricParser, initRender } from './utils';
 import Scroller from './Scroller.vue';
 
 declare const __VUEPRESS_SSR__: boolean;
@@ -135,9 +136,9 @@ export default defineComponent({
           return (
             this.currentTime >= l.time &&
             (nextLyric ? this.currentTime < nextLyric.time : true)
-          )
+          );
         })
-        : -1
+        : -1;
       return temp;
     },
     lyricWithTranslation() {
@@ -147,8 +148,8 @@ export default defineComponent({
       // content统一转换数组形式
       if (lyricFiltered.length) {
         lyricFiltered.forEach(l => {
-          const { time, content } = l
-          const lyricItem = { time, content, contents: [content] }
+          const { time, content } = l;
+          const lyricItem = { time, content, contents: [content] };
           ret.push(lyricItem);
         })
       } else {
@@ -209,16 +210,17 @@ export default defineComponent({
       }
     },
     scrollToActiveLyric() {
-      if (this.activeLyricIndex !== -1) {
+      const index = this.activeLyricIndex;
+      if (index !== -1) {
         type Refs = {
           scroller: { getScroller: () => BScroll },
           lyric: HTMLDivElement,
         }
         const { scroller, lyric } = this.$refs as Refs;
-        if (lyric && lyric[this.activeLyricIndex]) {
+        if (lyric && lyric[index]) {
           scroller
             .getScroller()
-            .scrollToElement(lyric[this.activeLyricIndex], 200, 0, true);
+            .scrollToElement(lyric[index], 200, 0, true);
         }
       }
     },
@@ -238,45 +240,31 @@ export default defineComponent({
       const bufferLength = this.analyserAudio.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
-      const getCanvas = (): [number, number, CanvasRenderingContext2D | null] => {
+      const [WIDTH, HEIGHT] = [435, 250];
+      const getCanvas = (): CanvasRenderingContext2D | null => {
         const canvas = this.$refs.audioCanvas as HTMLCanvasElement | null;
         if(!canvas) {
-          return [0, 0, null];
+          return null;
         }
 
-        [canvas.width, canvas.height] = [435, 250];
-        return [canvas.width, canvas.height, canvas.getContext("2d")];
+        [canvas.width, canvas.height] = [WIDTH, HEIGHT];
+        return canvas.getContext("2d");
       }
 
+      const render = initRender(bufferLength);
       const renderFrame = () => {
         requestAnimationFrame(renderFrame);
-        const [WIDTH, HEIGHT, ctx] = getCanvas();
+        const ctx = getCanvas();
         if(!ctx) return;
 
         // 将当前频率数据复制到传入的Uint8Array，更新频率数据
         this.analyserAudio?.getByteFrequencyData(dataArray);
-        ctx.clearRect(0, 0, WIDTH, HEIGHT);
-
-        const barWidth = WIDTH / bufferLength;
-        // bufferLength表示柱形图中矩形的个数，当前是128个
-        for (let i = 0, x = 0; i < bufferLength; i++) {
-          const barHeight = dataArray[i];
-          const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-          this.colorPick(gradient, this.canvasTheme);
-          ctx.fillStyle = gradient;
-          ctx.fillRect(x, 250 - barHeight, barWidth, barHeight);
-          x += barWidth + 2;
-        }
+        render.bar(ctx, this.canvasTheme, [WIDTH, HEIGHT], dataArray);
       }
       renderFrame();
       this.isRendering = true;
     },
-    colorPick(gradient: CanvasGradient, arr: { pos: number, color: string }[]) {
-      arr.forEach(item => {
-        const { pos, color } = item;
-        gradient.addColorStop(pos, color);
-      })
-    }
+
   }
 });
 </script>
