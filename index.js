@@ -47,6 +47,9 @@ export default (options, context) => ({
   },
 
   name: '@vuepress-reco/vuepress-plugin-bgm-player',
+  alias: {
+    '@bgm-player': path.resolve(__dirname, './bin')
+  },
   multiple: true,
   clientConfigFile: path.resolve(__dirname, './bin/clientConfig.js'),
 })

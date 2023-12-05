@@ -1,8 +1,7 @@
 .music-player {
   max-width: 100vw;
   height: calc(100vh - 4rem);
-  margin-left: 5%;
-  padding-right: 5%;
+  padding: 0 5%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -11,7 +10,8 @@
   position: relative;
   gap: 1em;
 
-  @media (max-width: 800px) {
+  @media (max-width: 800px) or (max-height: 640px) {
+    padding-top: 2rem;
     flex-direction: column;
     overflow: auto;
     justify-content: start;
@@ -181,14 +181,18 @@
     align-items: center;
     position: relative;
 
-    @media (max-width: 800px) {
+    @media (max-width: 800px) or (max-height: 640px) {
       height: auto;
       width: 100%;
       padding: 0 5vw;
     }
 
     .panel {
-      &:has(canvas:not(.paused)) ~ hr {
+      &:has(canvas) {
+        height: 250px;
+      }
+
+      &:has(canvas) ~ hr {
         width: 98%;
       }
 
@@ -198,9 +202,9 @@
         overflow: auto;
 
         width: 100%;
-        height: calc(100vh - 6rem - 250px);
+        height: calc(100vh - 10em - 250px);
 
-        @media (max-width: 800px) {
+        @media (max-width: 800px) or (max-height: 640px){
           margin-top: 1rem;
           height: auto;
           overflow: auto;

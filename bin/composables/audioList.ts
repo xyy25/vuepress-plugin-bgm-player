@@ -92,16 +92,16 @@ function resolveAudios(requiredAudio: RequiredAudio[]): ResolvedAudios {
   };
 }
 
-const holderAudio: Audio = {
+const placeholderAudio: Audio = {
   name: '音乐加载中...',
   artist: '',
   url: '',
   cover: __DEFAULT_COVER__
 };
 
-const audioList = ref<Audio[]>([holderAudio]);
+const audioList = ref<Audio[]>([placeholderAudio]);
 const curIndex = ref(0);
-const curAudio = computed(() => audioList.value[curIndex.value] || holderAudio);
+const curAudio = computed(() => audioList.value[curIndex.value] || placeholderAudio);
 const httpEnd = ref(false);
 
 const { audios, asyncAudios } = resolveAudios(__AUDIOS__);
