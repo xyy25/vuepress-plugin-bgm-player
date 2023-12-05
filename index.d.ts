@@ -38,6 +38,7 @@ export interface AudioReplace {
 export interface BgPlayerOptions {
   defaultCover: string
   position: Partial<PositionOptions>
+  chapterBorders: ChapterBorder[]
   audios: RequiredAudio[]
   autoplay: boolean
   autoShrink: boolean
@@ -45,6 +46,15 @@ export interface BgPlayerOptions {
   shrinkMode: "mini" | "float"
   floatPosition: "left" | "right"
   floatStyle: StyleValue
+}
+
+export interface ChapterBorder {
+  title: string
+  start: string
+  end: string
+}
+export interface Chapter extends ChapterBorder {
+  audioList: (Audio & { index: number })[]
 }
 
 declare const _default: (options: Partial<BgPlayerOptions>, context?: any) => PluginObject;
