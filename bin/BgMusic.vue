@@ -73,7 +73,7 @@
 
 <script>
 import ModuleTransition from './ModuleTransition.vue';
-import * as comp from "./composables";
+import * as cp from "./composables";
 
 export default {
   components: {
@@ -81,13 +81,14 @@ export default {
   },
   data() {
     return {
-      curIndex: comp.useCurIndex(),
-      curPlayStatus: comp.useCurPlayStatus(),
-      curAudio: comp.useCurAudio(),
-      audioRef: comp.useAudioRef(),
-      audiolist: comp.useAudioList(),
-      volume: comp.useVolume(),
-      isMute: comp.useMute(),
+      curIndex: cp.useCurIndex(),
+      curPlayStatus: cp.useCurPlayStatus(),
+      curAudio: cp.useCurAudio(),
+      audioRef: cp.useAudioRef(),
+      audiolist: cp.useAudioList(),
+      volume: cp.useVolume(),
+      isMute: cp.useMute(),
+      playMode: cp.usePlayMode(),
       currentTime: 0,
       totalTime: 0,
       /** @type {string} */
@@ -162,11 +163,11 @@ export default {
       }
     }
 
-    comp.registerTimeupdate(e => {
+    cp.registerTimeupdate(e => {
       this.currentTime = e.target.currentTime;
       this.totalTime = e.target.duration;
     });
-    comp.registerEnded(() => this.bgmEnded());
+    cp.registerEnded(() => this.bgmEnded());
 
     this.isMini = this.isMobile();
     // autoShrink为true时隐藏歌曲信息
@@ -233,12 +234,12 @@ export default {
     },
     // 暂停
     pauseBgm() {
-      comp.audioPause();
+      cp.audioPause();
     },
     // 播放
     async playBgm() {
       try {
-        await comp.audioPlay();
+        await cp.audioPlay();
         if (this.isFault) {
           this.isFault = false;
         }
@@ -254,13 +255,13 @@ export default {
     playNext() {
       this.currentTime = 0;
       this.isFault = false;
-      comp.playNext();
+      cp.playNext(this.playMode === "single");
     },
     // 播放上一首
     playLast() {
       this.currentTime = 0;
       this.isFault = false;
-      comp.playLast();
+      cp.playLast(this.playMode === "single");
     },
     // bgm结束时自动下一首
     bgmEnded() {

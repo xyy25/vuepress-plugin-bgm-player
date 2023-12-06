@@ -45,7 +45,7 @@ import type { PropType } from 'vue';
 import type BScroll from '@better-scroll/core';
 import type { LRCObject, Theme } from './utils';
 import { defineComponent } from 'vue';
-import { useAnalyserAudio, useCurPlayStatus } from '../composables';
+import { useCurAudio, useAnalyserAudio, useCurPlayStatus } from '../composables';
 import { audioTheme, lyricParser, initRender } from './utils';
 import Scroller from './Scroller.vue';
 
@@ -73,10 +73,6 @@ export default defineComponent({
       type: Boolean,
       default: false,
     },
-    audio: {
-      type: Object as PropType<Audio>,
-      required: true,
-    },
     theme: {
       type: [String, Array] as PropType<Theme | (typeof audioTheme)["apple"]>,
       default: "apple",
@@ -92,6 +88,7 @@ export default defineComponent({
   },
   data(ctx) {
     return {
+      audio: useCurAudio(),
       isRendering: false,
       lyric: <LRCObject[]>[],
       nolyric: false,

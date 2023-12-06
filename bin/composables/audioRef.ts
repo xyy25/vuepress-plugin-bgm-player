@@ -1,4 +1,4 @@
-import { ref, watch } from "vue";
+import { readonly, ref, watch } from "vue";
 import { throttle } from "./throttle";
 
 declare const __VUEPRESS_SSR__: boolean;
@@ -130,8 +130,8 @@ export const registerEnded = (cb: EventFunc) => {
   endedHooks.value.push(cb);
 }
 export const useAudioRef = () => audioRef;
-export const useCurPlayStatus = () => curPlayStatus;
-export const useCanplay = () => canplay;
+export const useCurPlayStatus = () => readonly(curPlayStatus);
+export const useCanplay = () => readonly(canplay);
 export const useVolume = () => volume;
 export const useMute = () => mute;
-export const useAnalyserAudio = () => analyserAudio;
+export const useAnalyserAudio = () => readonly(analyserAudio);

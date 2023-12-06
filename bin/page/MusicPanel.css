@@ -78,3 +78,26 @@
     height: 350px;
   }
 }
+
+.lyric-item.active {
+  color: #333 !important;
+}
+
+.music-name {
+  p:first-child {
+    color: #333
+  }
+}
+
+.dark {
+  .lyric-item.active {
+    color: white !important;
+    ;
+  }
+
+  .music-name {
+    p:first-child {
+      color: #fefefe
+    }
+  }
+}

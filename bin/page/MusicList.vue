@@ -5,12 +5,12 @@
       >
       <div v-if="chIdx > 0 && chapter.audioList.length" class="chapter-title">
         <p v-if="characters[chIdx - 1]">第{{ characters[chIdx - 1] }}章</p>
-        <p @click="emit('change', chapter.audioList[0].index)">
+        <p @click="!isCurrentChapter(chapter) && emit('change', chapter.audioList[0].index)">
           <span class="play-sym" v-if="playStatus === 'playing' && isCurrentChapter(chapter)">
             <Playing />
           </span>
           <span v-for="(char, idx) in chapter.title" :key="idx" v-text="char"
-            class="title" :style="{ '--delay': `${rand(2)}s` }" />
+            class="title" :style="{ '--delay': `${Math.random() * 2}s` }" />
           <span class="play-sym" v-if="playStatus === 'playing' && isCurrentChapter(chapter)">
             <Playing />
           </span>
@@ -40,14 +40,11 @@
 
 <script setup lang="ts">
 import type { Audio, Chapter, ChapterBorder } from '../../index';
-import type { PlayStatus } from '../composables';
+import { useAudioList, useCurPlayStatus, useCurIndex } from '../composables';
 import { computed, toRef, onMounted, watch } from 'vue';
 import Playing from './Playing.vue';
 
 const props = defineProps<{
-  audioList: Audio[],
-  playStatus: PlayStatus,
-  currentIndex: number,
   chapterBorders?: ChapterBorder[],
 }>();
 
@@ -57,9 +54,10 @@ const emit = defineEmits<{
 
 declare const __CHAPTER_BORDERS__: ChapterBorder[];
 
-const audioList = toRef(props, "audioList");
 const borders = toRef(props, "chapterBorders", __CHAPTER_BORDERS__);
-const currentIndex = toRef(props, "currentIndex");
+const audioList = useAudioList();
+const playStatus = useCurPlayStatus();
+const currentIndex = useCurIndex();
 const characters = '一二三四五六七八九十'.split('');
 
 const chapters = computed(() => {
@@ -80,14 +78,11 @@ const chapters = computed(() => {
 });
 
 const isCurrentChapter = (chapter: Chapter): boolean => {
-  const firstIndex = chapter.audioList.at(0)?.index || -1;
-  const lastIndex = chapter.audioList.at(-1)?.index || -1;
+  const firstIndex = chapter.audioList.at(0)?.index ?? Infinity;
+  const lastIndex = chapter.audioList.at(-1)?.index ?? -1;
   return currentIndex.value >= firstIndex && currentIndex.value <= lastIndex;
 }
 
-const rand = (max: number, min: number = 0) => {
-  return Math.random() * (max - min) + min;
-}
 onMounted(() => {
   watch(chapters, (ch) => console.log(ch));
 });
