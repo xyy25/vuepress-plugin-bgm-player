@@ -4,7 +4,7 @@ import { throttle } from "./throttle";
 declare const __VUEPRESS_SSR__: boolean;
 declare const __AUTOPLAY__: boolean;
 const VOLUME_KEY = "reco-bgm-volume";
-export type EventFunc = (e: Event) => void;
+export type EventFunc = (this: HTMLAudioElement, e: Event) => void;
 export type PlayStatus = "playing" | "pending" | "paused";
 
 const audioRef = ref<HTMLAudioElement | null>(null);
@@ -34,9 +34,9 @@ if (!__VUEPRESS_SSR__) {
     if (isIOS) {
       audio.load();
     }
-    audio.addEventListener("canplay", (e) => {
+    audio.addEventListener("canplay", function(e) {
       canplay.value = true;
-      canplayHooks.value.forEach((f) => f(e));
+      canplayHooks.value.forEach(f => f.call(this, e));
       if (firstLoad && __AUTOPLAY__) {
         tryAutoPlay();
         firstLoad = false;
@@ -46,12 +46,12 @@ if (!__VUEPRESS_SSR__) {
         audioPlay();
       }
     });
-    audio.addEventListener("ended", (e) =>
-      endedHooks.value.forEach((f) => f(e))
-    );
-    audio.addEventListener("timeupdate", (e) =>
-      timeupdateHooks.value.forEach((f) => f(e))
-    );
+    audio.addEventListener("ended", function(e) {
+      endedHooks.value.forEach(f => f.call(this, e));
+    });
+    audio.addEventListener("timeupdate", function(e) {
+      timeupdateHooks.value.forEach(f => f.call(this, e))
+    });
 
     // @ts-ignore
     // 创建AudioContext，关联音频输入，进行解码、控制音频播放和暂停

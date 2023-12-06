@@ -67,13 +67,12 @@ export default defineComponent({
     if(__VUEPRESS_SSR__) {
       return;
     }
-    cp.registerTimeupdate((e) => {
-      const target = e.target as HTMLAudioElement | null;
-      if(!target) return;
-      this.currentTime = target.currentTime;
-      this.totalTime = target.duration;
+    const that = this;
+    cp.registerTimeupdate(function() {
+      that.currentTime = this.currentTime;
+      that.totalTime = this.duration;
     });
-    cp.registerEnded((e) => this.end());
+    cp.registerEnded(() => this.end());
     this.getSong();
     if(this.songReady) {
       (this.$refs.musicPanelRef as InstanceType<typeof MusicPanel>).onLoadAudio();

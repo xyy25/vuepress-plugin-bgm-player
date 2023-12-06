@@ -162,10 +162,10 @@ export default {
         'border-bottom-left-radius': '20px'
       }
     }
-
-    cp.registerTimeupdate(e => {
-      this.currentTime = e.target.currentTime;
-      this.totalTime = e.target.duration;
+    const bgMusic = this;
+    cp.registerTimeupdate(function() {
+      bgMusic.currentTime = this.currentTime;
+      bgMusic.totalTime = this.duration;
     });
     cp.registerEnded(() => this.bgmEnded());
 
