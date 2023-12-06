@@ -5,7 +5,7 @@
       >
       <div v-if="chIdx > 0 && chapter.audioList.length" class="chapter-title">
         <p v-if="characters[chIdx - 1]">第{{ characters[chIdx - 1] }}章</p>
-        <p @click="!isCurrentChapter(chapter) && emit('change', chapter.audioList[0].index)">
+        <p @click="onClickChapterTitle(chapter)">
           <span class="play-sym" v-if="playStatus === 'playing' && isCurrentChapter(chapter)">
             <Playing />
           </span>
@@ -40,7 +40,7 @@
 
 <script setup lang="ts">
 import type { Audio, Chapter, ChapterBorder } from '../../index';
-import { useAudioList, useCurPlayStatus, useCurIndex } from '../composables';
+import { useAudioList, useCurPlayStatus, useCurIndex, usePlayMode } from '../composables';
 import { computed, toRef, onMounted, watch } from 'vue';
 import Playing from './Playing.vue';
 
@@ -57,6 +57,7 @@ declare const __CHAPTER_BORDERS__: ChapterBorder[];
 const borders = toRef(props, "chapterBorders", __CHAPTER_BORDERS__);
 const audioList = useAudioList();
 const playStatus = useCurPlayStatus();
+const playMode = usePlayMode();
 const currentIndex = useCurIndex();
 const characters = '一二三四五六七八九十'.split('');
 
@@ -77,10 +78,21 @@ const chapters = computed(() => {
   return chapters;
 });
 
-const isCurrentChapter = (chapter: Chapter): boolean => {
+function isCurrentChapter(chapter: Chapter): boolean {
   const firstIndex = chapter.audioList.at(0)?.index ?? Infinity;
   const lastIndex = chapter.audioList.at(-1)?.index ?? -1;
   return currentIndex.value >= firstIndex && currentIndex.value <= lastIndex;
+}
+
+function randInt(max: number, min: number = 0): number {
+  return Math.floor(Math.random() * (max - min) + min);
+}
+
+function onClickChapterTitle(chapter: Chapter) {
+  if(playMode.value === "random") {
+    return emit("change", chapter.audioList[randInt(chapter.audioList.length)].index);
+  }
+  !isCurrentChapter(chapter) && emit('change', chapter.audioList[0].index);
 }
 
 onMounted(() => {

@@ -194,6 +194,10 @@ export const playLast = (force: boolean = false) => {
 export const playIndex = (i: number) => {
   const len = audioList.value.length;
   curIndex.value = i < 0 ? i % len + len : i % len;
+  if(playMode.value === "random") {
+    shuffledIndex = 0;
+    shuffledList = genShuffledList(audioList.value, curIndex.value);
+  }
 }
 const playModes: PlayMode[] = ["sequential", "loop", "single", "random"];
 export const changePlayMode = () => {
