@@ -1,6 +1,6 @@
 import { computed, watch, ref, readonly } from "vue";
 import type { Audio, RequiredAudio } from "../../index";
-import { audioPause } from "./audioRef";
+import { audioPause, audioReplay } from "./audioRef";
 
 declare const __VUEPRESS_SSR__: boolean;
 declare const __DEFAULT_COVER__: string;
@@ -160,7 +160,7 @@ export const playNext = (force: boolean = false) => {
   }
   const mode = playMode.value;
   if(mode === "single") {
-    return;
+    return audioReplay();
   }
   if(mode === "random") {
     const len = shuffledList.length;

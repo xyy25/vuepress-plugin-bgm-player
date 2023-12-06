@@ -101,6 +101,13 @@ if (!__VUEPRESS_SSR__) {
   };
 }
 
+export const audioReplay = () => {
+  if (!audioRef.value) {
+    return;
+  }
+  audioRef.value.currentTime = 0;
+}
+
 export const audioPlay = async () => {
   if (!audioRef.value || playPromise.value) {
     return;

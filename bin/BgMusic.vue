@@ -265,7 +265,9 @@ export default {
     },
     // bgm结束时自动下一首
     bgmEnded() {
-      this.playNext();
+      this.currentTime = 0;
+      this.isFault = false;
+      cp.playNext();
     },
     // 点击进度条跳播
     progressJump(e) {
