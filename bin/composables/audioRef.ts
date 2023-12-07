@@ -53,21 +53,6 @@ if (!__VUEPRESS_SSR__) {
       timeupdateHooks.value.forEach(f => f.call(this, e))
     });
 
-    // @ts-ignore
-    // 创建AudioContext，关联音频输入，进行解码、控制音频播放和暂停
-    audioContext.value = new (window.AudioContext || window.webkitAudioContext)();
-    const ctx = audioContext.value;
-    // 创建analyser，获取音频的频率数据（FrequencyData）和时域数据（TimeDomainData）
-    analyserAudio.value = ctx.createAnalyser();
-    // fftSize：快速傅里叶变换，信号样本的窗口大小，区间为32-32768，默认2048
-    analyserAudio.value.fftSize = 1024;
-    // 创建音频源
-    sourceAudio.value = ctx.createMediaElementSource(audio);
-    // 音频源关联到分析器
-    sourceAudio.value.connect(analyserAudio.value);
-    // 分析器关联到输出设备（耳机、扬声器等）
-    analyserAudio.value.connect(ctx.destination);
-
     stopWatch();
   });
 
@@ -101,10 +86,32 @@ if (!__VUEPRESS_SSR__) {
   };
 }
 
-export const audioReplay = () => {
-  if (!audioRef.value) {
-    return;
+const initAudioContext = () => {
+  if(!audioRef.value) return;
+  if (!audioContext.value) {
+    // @ts-ignore
+    // 创建AudioContext，关联音频输入，进行解码、控制音频播放和暂停
+    audioContext.value = new (window.AudioContext || window.webkitAudioContext)();
   }
+  const ctx = audioContext.value;
+  if(!analyserAudio.value) {
+    // 创建analyser，获取音频的频率数据（FrequencyData）和时域数据（TimeDomainData）
+    analyserAudio.value = ctx.createAnalyser();
+    // fftSize：快速傅里叶变换，信号样本的窗口大小，区间为32-32768，默认2048
+    analyserAudio.value.fftSize = 1024;
+  }
+  if(!sourceAudio.value) {
+    // 创建音频源
+    sourceAudio.value = ctx.createMediaElementSource(audioRef.value);
+    // 音频源关联到分析器
+    sourceAudio.value.connect(analyserAudio.value);
+    // 分析器关联到输出设备（耳机、扬声器等）
+    analyserAudio.value.connect(ctx.destination);
+  }
+}
+
+export const audioReplay = () => {
+  if (!audioRef.value) return;
   audioRef.value.currentTime = 0;
 }
 
@@ -117,6 +124,7 @@ export const audioPlay = async () => {
   await playPromise.value;
   curPlayStatus.value = "playing";
   playPromise.value = null;
+  initAudioContext();
 };
 
 export const audioPause = () => {
