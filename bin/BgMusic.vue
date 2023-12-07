@@ -1,11 +1,7 @@
 <template>
   <div class="reco-bgm-panel">
     <!-- 播放器 -->
-    <audio id="bgm"
-      :src="curAudio.url"
-      ref="bgm"
-      crossorigin="anonymous"
-    />
+    <audio id="bgm" ref="bgm" crossorigin="anonymous" />
     <module-transition :position="floatPosition">
       <div v-show="isFloat" @click="toggleMode(false)" class="reco-float-box" :style="floatStyle">
         <img :class="rotate" :src="curAudio.cover ?? defaultCover">

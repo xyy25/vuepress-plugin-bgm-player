@@ -18,7 +18,7 @@
   position: relative;
   gap: 1em;
 
-  @media (max-width: 800px) or (max-height: 640px) {
+  @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
     padding-top: 2rem;
     flex-direction: column;
     overflow: auto;
@@ -58,7 +58,7 @@
     align-items: center;
     position: relative;
 
-    @media (max-width: 800px) or (max-height: 640px) {
+    @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
       height: auto;
       width: 100%;
       margin-top: 2rem;
@@ -119,7 +119,7 @@
         width: 100%;
         height: calc(100vh - 10em - 250px);
 
-        @media (max-width: 800px) or (max-height: 640px){
+        @media (max-width: 800px), (max-height: 640px){
           margin-top: 1rem;
           height: auto;
           overflow: auto;

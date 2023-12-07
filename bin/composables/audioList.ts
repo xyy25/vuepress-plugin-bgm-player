@@ -1,6 +1,6 @@
 import { computed, watch, ref, readonly } from "vue";
 import type { Audio, RequiredAudio } from "../../index";
-import { audioPause, audioReplay } from "./audioRef";
+import { audioPause, audioReplay, useAudioRef } from "./audioRef";
 
 declare const __VUEPRESS_SSR__: boolean;
 declare const __DEFAULT_COVER__: string;
@@ -101,6 +101,7 @@ const placeholderAudio: Audio = {
   cover: __DEFAULT_COVER__
 };
 
+const audioRef = useAudioRef();
 const audioList = ref<Audio[]>([placeholderAudio]);
 const curIndex = ref(0);
 const curAudio = computed(() => audioList.value[curIndex.value] || placeholderAudio);
@@ -134,11 +135,18 @@ const genShuffledList = (audioList: Audio[], firstIndex: number | null = null): 
   }
   return list;
 }
+
 watch(audioList, (newList) => {
   curIndex.value = 0;
   shuffledIndex = 0;
   shuffledList = genShuffledList(newList, 0);
 });
+watch(curAudio, (newAudio) => {
+  if(!audioRef.value) {
+    return;
+  }
+  audioRef.value.src = newAudio.url;
+})
 
 const playNextForced = () => {
   if(curIndex.value >= audioList.value.length - 1) {
