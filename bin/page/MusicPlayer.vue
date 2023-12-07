@@ -4,25 +4,45 @@
       <Loading />
     </div>
     <div class="left">
-      <MusicBoard ref="musicBoardRef"
-        :current-time="currentTime"
-        :total-time="totalTime"
-        @changePanel="panelIsLyric = !panelIsLyric"
-        @play="play"
-        @pause="pause"
-        @jump="to => (currentTime = to, scrollLrc())"
-        @change="to => ({ last: playLast, next: playNext }[to])()"
-      />
+      <div class="board">
+        <MusicBoard ref="musicBoardRef"
+          :current-time="currentTime"
+          :total-time="totalTime"
+          @changePanel="panelIsLyric = !panelIsLyric"
+          @play="play"
+          @pause="pause"
+          @jump="to => (currentTime = to, scrollLrc())"
+          @change="to => ({ last: playLast, next: playNext }[to])()"
+        />
+      </div>
+      <div class="slot">
+        <slot
+          :audio="audio"
+          :index="curIndex"
+          :play-status="playStatus"
+          :play-mode="playMode"
+          :current-time="currentTime"
+          :total-time="totalTime"
+        />
+      </div>
     </div>
     <div class="right">
-      <div class="panel">
+      <div class="panel" :class="{ 'hide-panel': hidePanel && !panelIsLyric }">
         <MusicPanel ref="musicPanelRef"
           :show-lyric="panelIsLyric"
           :current-time="currentTime"
           :total-time="totalTime"
         />
       </div>
-      <hr />
+      <button class="panel-hidden-btn" @click="hidePanel = !hidePanel">
+        <hr />
+        <svg width="16" height="16" xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 32 32" fill="currentColor">
+          <polygon v-if="hidePanel" points="16,22 6,12 7.4,10.6 16,19.2 24.6,10.6 26,12 "/>
+          <polygon v-else points="16,10 26,20 24.6,21.4 16,12.8 7.4,21.4 6,20 "/>
+        </svg>
+        <hr />
+      </button>
       <div class="list">
         <MusicList @change="playTo" />
       </div>
@@ -52,6 +72,8 @@ export default defineComponent({
   data() {
     return {
       httpEnd: cp.useHttpEnd(),
+      audio: cp.useCurAudio(),
+      curIndex: cp.useCurIndex(),
       songReady: cp.useCanplay(),
       playStatus: cp.useCurPlayStatus(),
       playMode: cp.usePlayMode(),
@@ -59,6 +81,7 @@ export default defineComponent({
       totalTime: 0,
       albumName: "未知歌单",
       isLoading: true,
+      hidePanel: false,
       panelIsLyric: false,
     }
   },

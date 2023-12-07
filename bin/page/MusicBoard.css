@@ -8,6 +8,9 @@
 
 .cover {
   position: relative;
+  display: flex;
+  justify-content: center;
+
   .point {
     position: absolute;
     left: 180px;
