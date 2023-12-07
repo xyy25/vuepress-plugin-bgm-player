@@ -158,10 +158,12 @@ export default {
         'border-bottom-left-radius': '20px'
       }
     }
-    const bgMusic = this;
+    const that = this;
+    cp.registerCanplay(function() {
+      that.totalTime = this.duration;
+    })
     cp.registerTimeupdate(function() {
-      bgMusic.currentTime = this.currentTime;
-      bgMusic.totalTime = this.duration;
+      that.currentTime = this.currentTime;
     });
     cp.registerEnded(() => this.bgmEnded());
 

@@ -91,9 +91,11 @@ export default defineComponent({
       return;
     }
     const that = this;
+    cp.registerCanplay(function() {
+      that.totalTime = this.duration;
+    })
     cp.registerTimeupdate(function() {
       that.currentTime = this.currentTime;
-      that.totalTime = this.duration;
     });
     cp.registerEnded(() => this.end());
     this.getSong();
