@@ -156,8 +156,8 @@ export default defineComponent({
       setTimeout(() => musicPanelRef.checkAndScroll(), 100);
     },
     getSong() {
-      const musicBoardRef = this.$refs.musicBoardRef as InstanceType<typeof MusicBoard>;
-      musicBoardRef.getSong();
+      const musicBoardRef = this.$refs.musicBoardRef as InstanceType<typeof MusicBoard> | null;
+      musicBoardRef?.getSong();
     },
   }
 });
