@@ -17,7 +17,7 @@
       </div>
       <div class="slot">
         <slot
-          :audio="audio"
+          :audio="curAudio"
           :index="curIndex"
           :play-status="playStatus"
           :play-mode="playMode"
@@ -72,7 +72,8 @@ export default defineComponent({
   data() {
     return {
       httpEnd: cp.useHttpEnd(),
-      audio: cp.useCurAudio(),
+      audioRef: cp.useAudioRef(),
+      curAudio: cp.useCurAudio(),
       curIndex: cp.useCurIndex(),
       songReady: cp.useCanplay(),
       playStatus: cp.useCurPlayStatus(),
@@ -90,18 +91,27 @@ export default defineComponent({
     if(__VUEPRESS_SSR__) {
       return;
     }
+    this.totalTime = this.audioRef?.duration || 0;
     const that = this;
-    cp.registerCanplay(function() {
+    cp.registerListener("canplay", function() {
       that.totalTime = this.duration;
-    })
-    cp.registerTimeupdate(function() {
+    }, "MusicPlayer");
+    cp.registerListener("timeupdate", function() {
       that.currentTime = this.currentTime;
-    });
-    cp.registerEnded(() => this.end());
+    }, "MusicPlayer");
+    cp.registerListener("ended", () => this.end(), "MusicPlayer");
     this.getSong();
     if(this.songReady) {
       (this.$refs.musicPanelRef as InstanceType<typeof MusicPanel>).onLoadAudio();
     }
+  },
+  unmounted() {
+    if(__VUEPRESS_SSR__) {
+      return;
+    }
+    cp.unregisterListener("canplay", "MusicPlayer");
+    cp.unregisterListener("timeupdate", "MusicPlayer");
+    cp.unregisterListener("ended", "MusicPlayer");
   },
   watch: {
     curPlayStatus(n) {

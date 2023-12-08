@@ -4,7 +4,10 @@ import { throttle } from "./throttle";
 declare const __VUEPRESS_SSR__: boolean;
 declare const __AUTOPLAY__: boolean;
 const VOLUME_KEY = "reco-bgm-volume";
-export type EventFunc = (this: HTMLAudioElement, e: Event) => void;
+interface EventFunc extends Function {
+  (this: HTMLAudioElement, e: Event): void;
+  id?: string;
+};
 export type PlayStatus = "playing" | "pending" | "paused";
 
 const audioRef = ref<HTMLAudioElement | null>(null);
@@ -17,9 +20,12 @@ const analyserAudio = ref<AnalyserNode | null>(null);
 const sourceAudio = ref<MediaElementAudioSourceNode | null>(null);
 
 const canplay = ref(false);
-const canplayHooks = ref<EventFunc[]>([]);
-const timeupdateHooks = ref<EventFunc[]>([]);
-const endedHooks = ref<EventFunc[]>([]);
+type AudioEventHooks = "canplay" | "timeupdate" | "ended";
+const eventHooks = ref<Record<AudioEventHooks, EventFunc[]>>({
+  canplay: [],
+  timeupdate: [],
+  ended: [],
+});
 
 if (!__VUEPRESS_SSR__) {
   let firstLoad = false;
@@ -36,7 +42,7 @@ if (!__VUEPRESS_SSR__) {
     }
     audio.addEventListener("canplay", function(e) {
       canplay.value = true;
-      canplayHooks.value.forEach(f => f.call(this, e));
+      eventHooks.value["canplay"].forEach(f => f.call(this, e));
       if (firstLoad && __AUTOPLAY__) {
         tryAutoPlay();
         firstLoad = false;
@@ -46,11 +52,11 @@ if (!__VUEPRESS_SSR__) {
         audioPlay();
       }
     });
-    audio.addEventListener("ended", function(e) {
-      endedHooks.value.forEach(f => f.call(this, e));
-    });
     audio.addEventListener("timeupdate", function(e) {
-      timeupdateHooks.value.forEach(f => f.call(this, e))
+      eventHooks.value["timeupdate"].forEach(f => f.call(this, e))
+    });
+    audio.addEventListener("ended", function(e) {
+      eventHooks.value["ended"].forEach(f => f.call(this, e));
     });
 
     stopWatch();
@@ -108,12 +114,12 @@ const initAudioContext = () => {
     // 分析器关联到输出设备（耳机、扬声器等）
     analyserAudio.value.connect(ctx.destination);
   }
-}
+};
 
 export const audioReplay = () => {
   if (!audioRef.value) return;
   audioRef.value.currentTime = 0;
-}
+};
 
 export const audioPlay = async () => {
   if (!audioRef.value || playPromise.value) {
@@ -135,15 +141,19 @@ export const audioPause = () => {
   audioRef.value.pause();
 };
 
-export const registerCanplay = (cb: EventFunc) => {
-  canplayHooks.value.push(cb);
-}
-export const registerTimeupdate = (cb: EventFunc) => {
-  timeupdateHooks.value.push(throttle(cb, 500));
-}
-export const registerEnded = (cb: EventFunc) => {
-  endedHooks.value.push(cb);
-}
+export const registerListener = (hook: AudioEventHooks, cb: EventFunc, name?: string) => {
+  if(hook === "timeupdate") {
+    cb = throttle(cb, 500);
+  }
+  cb.id = name;
+  eventHooks.value[hook].push(cb);
+};
+
+export const unregisterListener = (hook: AudioEventHooks, name: string) => {
+  const idx = eventHooks.value[hook].findIndex(f => f.id === name);
+  idx >= 0 && eventHooks.value[hook].splice(idx, 1);
+};
+
 export const useAudioRef = () => audioRef;
 export const useCurPlayStatus = () => readonly(curPlayStatus);
 export const useCanplay = () => readonly(canplay);

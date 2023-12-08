@@ -134,7 +134,7 @@ const genShuffledList = (audioList: Audio[], firstIndex: number | null = null): 
     list[0] = firstIndex;
   }
   return list;
-}
+};
 
 watch(audioList, (newList) => {
   curIndex.value = 0;
@@ -146,7 +146,7 @@ watch(curAudio, (newAudio) => {
     return;
   }
   audioRef.value.src = newAudio.url;
-})
+});
 
 const playNextForced = () => {
   if(curIndex.value >= audioList.value.length - 1) {
@@ -154,14 +154,14 @@ const playNextForced = () => {
   } else {
     curIndex.value++;
   }
-}
+};
 const playLastForced = () => {
   if(curIndex.value <= 0) {
     curIndex.value = audioList.value.length - 1;
   } else {
     curIndex.value--;
   }
-}
+};
 export const playNext = (force: boolean = false) => {
   if(force) {
     return playNextForced();
@@ -187,7 +187,7 @@ export const playNext = (force: boolean = false) => {
   } else {
     curIndex.value++;
   }
-}
+};
 export const playLast = (force: boolean = false) => {
   if(!force && playMode.value === "random") {
     shuffledIndex--;
@@ -198,7 +198,7 @@ export const playLast = (force: boolean = false) => {
     return;
   }
   playLastForced();
-}
+};
 export const playIndex = (i: number) => {
   const len = audioList.value.length;
   curIndex.value = i < 0 ? i % len + len : i % len;
@@ -206,7 +206,7 @@ export const playIndex = (i: number) => {
     shuffledIndex = 0;
     shuffledList = genShuffledList(audioList.value, curIndex.value);
   }
-}
+};
 const playModes: PlayMode[] = ["sequential", "loop", "single", "random"];
 export const changePlayMode = () => {
   const i = playModes.indexOf(playMode.value);
@@ -215,7 +215,7 @@ export const changePlayMode = () => {
     shuffledIndex = 0;
     shuffledList = genShuffledList(audioList.value, curIndex.value);
   }
-}
+};
 export const usePlayMode = () => readonly(playMode);
 export const useAudioList = () => readonly(audioList);
 export const useCurIndex = () => readonly(curIndex);

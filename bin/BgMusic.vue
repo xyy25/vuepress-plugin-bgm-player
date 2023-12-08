@@ -159,13 +159,13 @@ export default {
       }
     }
     const that = this;
-    cp.registerCanplay(function() {
+    cp.registerListener("canplay", function() {
       that.totalTime = this.duration;
     })
-    cp.registerTimeupdate(function() {
+    cp.registerListener("timeupdate", function() {
       that.currentTime = this.currentTime;
     });
-    cp.registerEnded(() => this.bgmEnded());
+    cp.registerListener("ended", () => this.bgmEnded());
 
     this.isMini = this.isMobile();
     // autoShrink为true时隐藏歌曲信息
