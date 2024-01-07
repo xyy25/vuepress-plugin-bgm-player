@@ -39,42 +39,65 @@
 </template>
 
 <script setup lang="ts">
-import type { Audio, Chapter, ChapterBorder } from '../../index';
+import type { Audio, Chapter, ChapterOption } from '../../index';
 import { useAudioList, useCurPlayStatus, useCurIndex, usePlayMode } from '../composables';
 import { computed, toRef, onMounted, watch } from 'vue';
 import Playing from './Playing.vue';
 
 const props = defineProps<{
-  chapterBorders?: ChapterBorder[],
+  chapterOptions?: ChapterOption[],
 }>();
 
 const emit = defineEmits<{
   (event: "change", index: number): void
 }>();
 
-declare const __CHAPTER_BORDERS__: ChapterBorder[];
+declare const __CHAPTER_OPTIONS__: ChapterOption[];
 
-const borders = toRef(props, "chapterBorders", __CHAPTER_BORDERS__);
+const options = toRef(props, "chapterOptions", __CHAPTER_OPTIONS__);
 const audioList = useAudioList();
 const playStatus = useCurPlayStatus();
 const playMode = usePlayMode();
 const currentIndex = useCurIndex();
 const characters = '一二三四五六七八九十'.split('');
 
+type AudioItem = Audio & { index: number };
 const chapters = computed(() => {
   const chapters: Chapter[] = [{
-    title: '默认章节', start: '', end: '', audioList: []
+    title: '默认章节', audioList: []
   }];
-  let curIdx = -1, chapter: Chapter | null = null;
-  audioList.value.forEach((audio, index) => {
-    const name = [audio.name, audio.artist].join(" - ");
-    if(name === borders.value[curIdx + 1]?.start) {
-      chapter = { ...borders.value[++curIdx], audioList: [] };
-      chapters.push(chapter);
+  for(const option of options.value) {
+    const audioMap: Record<string, AudioItem> =
+      Object.fromEntries(audioList.value.map((a, index) => [
+        [a.name, a.artist].join(" - "), { ...a, index }
+      ]));
+    const list: AudioItem[] = [];
+    if("order" in option && !option.order.length) {
+      for(const audioOrder of option.order) {
+        if(typeof audioOrder === "string") {
+          list.push(audioMap[audioOrder]);
+        } else {
+          const index = audioOrder;
+          list.push({ ...audioList.value[index], index });
+        }
+      }
+    } else if("start" in option) {
+      let stIdx = typeof option.start === "string"
+        ? audioMap[option.start]?.index || 0
+        : option.start;
+      let edIdx = typeof option.end === "string"
+        ? audioMap[option.end]?.index || audioList.value.length - 1
+        : option.end;
+      [stIdx, edIdx] = [Math.min(stIdx, edIdx), Math.max(stIdx, edIdx)];
+      list.push(...audioList.value
+        .map((a, index) => ({ ...a, index }))
+        .slice(stIdx, edIdx + 1)
+      );
     }
-    (chapter ?? chapters[0]).audioList.push({ ...audio, index });
-    if(name === borders.value[curIdx]?.end) chapter = null;
-  });
+    chapters.push({
+      title: option.title, audioList: list
+    });
+  }
   return chapters;
 });
 

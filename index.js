@@ -13,7 +13,7 @@ export default (options, context) => ({
       defaultCover,
       position,
       draggable,
-      chapterBorders,
+      chapterOptions,
       audios,
       autoplay,
       autoShrink,
@@ -32,7 +32,7 @@ export default (options, context) => ({
     return {
       __DEFAULT_COVER__: defaultCover || path.resolve(__dirname, "./images/default.jpg"),
       __INIT_POSITION__: initPosition,
-      __CHAPTER_BORDERS__: chapterBorders || [],
+      __CHAPTER_OPTIONS__: chapterOptions || [],
       __AUDIOS__: audios,
       __AUTOPLAY__: autoplay || false,
       __AUTO_SHRINK__: autoShrink || false,

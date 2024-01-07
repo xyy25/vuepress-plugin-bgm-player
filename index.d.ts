@@ -38,7 +38,7 @@ export interface AudioReplace {
 export interface BgPlayerOptions {
   defaultCover: string
   position: Partial<PositionOptions>
-  chapterBorders: ChapterBorder[]
+  chapterOptions: ChapterOption[]
   audios: RequiredAudio[]
   autoplay: boolean
   autoShrink: boolean
@@ -48,12 +48,18 @@ export interface BgPlayerOptions {
   floatStyle: StyleValue
 }
 
+export type ChapterOption = ChapterBorder | ChapterOrder;
+export interface ChapterOrder {
+  title: string
+  order: (string | number)[]
+}
 export interface ChapterBorder {
   title: string
-  start: string
-  end: string
+  start: string | number
+  end: string | number
 }
-export interface Chapter extends ChapterBorder {
+export interface Chapter {
+  title: string
   audioList: (Audio & { index: number })[]
 }
 
