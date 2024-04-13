@@ -1,12 +1,21 @@
-.music-player {
+#music-player {
   --hover-color: #ddd;
 }
 
-.dark .music-player {
+.dark #music-player {
   --hover-color: #222;
 }
 
-.music-player {
+@keyframes shining {
+  from {
+    text-shadow: 0 0 1px;
+  }
+  to {
+    text-shadow: 0 0 5px;
+  }
+}
+
+#music-player {
   max-width: 100vw;
   height: calc(100vh - 4rem);
   padding: 0 5%;
@@ -44,6 +53,48 @@
     justify-content: center;
     height: 100%;
 
+    .chapter {
+      position: absolute;
+      width: 100%;
+      top: 10%;
+      left: 0;
+
+      margin-bottom: 4rem;
+
+      @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
+        position: relative;
+        width: unset;
+        h1::before {
+          content: '♪';
+          margin-right: .4em;
+        }
+      }
+
+      &.playing h1 {
+        animation: shining 1.5s alternate infinite;
+      }
+
+      h1 {
+        font-family: 汉仪文黑;
+        padding-top: 0;
+        margin-bottom: .5rem;
+
+        &::after {
+          content: '♪';
+          margin-left: .4em;
+        }
+      }
+
+      div {
+        font-family: 有爱圆体;
+        white-space: pre;
+      }
+    }
+
+    .board {
+      width: 95%;
+    }
+
     .slot {
       width: 100%;
     }
@@ -68,6 +119,7 @@
     .panel {
       overflow: hidden;
       transition: height ease-in-out .2s;
+      width: 100%;
 
       &:has(canvas) {
         height: 250px;

@@ -1,17 +1,17 @@
 <template>
   <div class="music-list">
     <div v-for="(chapter, chIdx) in chapters" :key="chIdx"
-        class="chapter-list" :class="{ 'playing': isCurrentChapter(chapter) }"
+        class="chapter-list" :class="{ 'playing': chapter == currentChapter }"
       >
       <div v-if="chIdx > 0 && chapter.audioList.length" class="chapter-title">
         <p v-if="characters[chIdx - 1]">第{{ characters[chIdx - 1] }}章</p>
         <p @click="onClickChapterTitle(chapter)">
-          <span class="play-sym" v-if="playStatus === 'playing' && isCurrentChapter(chapter)">
+          <span class="play-sym" v-if="playStatus === 'playing' && chapter == currentChapter">
             <Playing />
           </span>
           <span v-for="(char, idx) in chapter.title" :key="idx" v-text="char"
             class="title" :style="{ '--delay': `${Math.random() * 2}s` }" />
-          <span class="play-sym" v-if="playStatus === 'playing' && isCurrentChapter(chapter)">
+          <span class="play-sym" v-if="playStatus === 'playing' &&chapter == currentChapter">
             <Playing />
           </span>
         </p>
@@ -41,7 +41,7 @@
 <script setup lang="ts">
 import type { Audio, Chapter, ChapterOption } from '../../index';
 import { useAudioList, useCurPlayStatus, useCurIndex, usePlayMode } from '../composables';
-import { computed, toRef, onMounted, watch } from 'vue';
+import { computed, toRef, onMounted, watch, ref } from 'vue';
 import Playing from './Playing.vue';
 
 const props = defineProps<{
@@ -50,6 +50,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (event: "change", index: number): void
+  (event: "chapterChange", chapter: Chapter): void
 }>();
 
 declare const __CHAPTER_OPTIONS__: ChapterOption[];
@@ -95,17 +96,21 @@ const chapters = computed(() => {
       );
     }
     chapters.push({
-      title: option.title, audioList: list
+      ...option,
+      audioList: list,
     });
   }
   return chapters;
 });
 
-function isCurrentChapter(chapter: Chapter): boolean {
-  const firstIndex = chapter.audioList.at(0)?.index ?? Infinity;
-  const lastIndex = chapter.audioList.at(-1)?.index ?? -1;
-  return currentIndex.value >= firstIndex && currentIndex.value <= lastIndex;
-}
+const currentChapter = computed<Chapter>(() => {
+  return chapters.value.find((chapter) => {
+    const firstIndex = chapter.audioList.at(0)?.index ?? Infinity;
+    const lastIndex = chapter.audioList.at(-1)?.index ?? -1;
+
+    return currentIndex.value >= firstIndex && currentIndex.value <= lastIndex;
+  }) ?? chapters.value[0];
+});
 
 function randInt(max: number, min: number = 0): number {
   return Math.floor(Math.random() * (max - min) + min);
@@ -115,11 +120,15 @@ function onClickChapterTitle(chapter: Chapter) {
   if(playMode.value === "random") {
     return emit("change", chapter.audioList[randInt(chapter.audioList.length)].index);
   }
-  !isCurrentChapter(chapter) && emit('change', chapter.audioList[0].index);
+  if(chapter != currentChapter.value) {
+    emit('change', chapter.audioList[0].index);
+  }
 }
 
 onMounted(() => {
   watch(chapters, (ch) => console.log(ch));
+  emit("chapterChange", currentChapter.value);
+  watch(currentChapter, chapter => emit("chapterChange", chapter));
 });
 </script>
 

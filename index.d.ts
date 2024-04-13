@@ -51,15 +51,18 @@ export interface BgPlayerOptions {
 export type ChapterOption = ChapterBorder | ChapterOrder;
 export interface ChapterOrder {
   title: string
+  description?: string
   order: (string | number)[]
 }
 export interface ChapterBorder {
   title: string
+  description?: string
   start: string | number
   end: string | number
 }
 export interface Chapter {
   title: string
+  description?: string
   audioList: (Audio & { index: number })[]
 }
 

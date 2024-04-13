@@ -1,5 +1,5 @@
 <template>
-  <div class="canvas-container" v-if="!showLyric">
+  <div ref="container" class="canvas-container" v-if="!showLyric">
     <div v-if="curPlayStatus === 'pending'">稍后播放..</div>
     <div v-if="!nolyric" v-show="curPlayStatus !== 'pending'"
       class="lyric" :style="{ transition: 'all .2s ease-in-out' }">
@@ -37,6 +37,11 @@
       </div>
     </Scroller>
   </div>
+  <teleport to="#app">
+    <div ref="bgCanvasContainer" class="bg-canvas">
+      <canvas ref="bgCanvas" :class="{ paused: curPlayStatus === 'paused' }"/>
+    </div>
+  </teleport>
 </template>
 
 <script lang="ts">
@@ -74,8 +79,8 @@ export default defineComponent({
       default: false,
     },
     theme: {
-      type: [String, Array] as PropType<Theme | (typeof audioTheme)["apple"]>,
-      default: "apple",
+      type: [String, Array] as PropType<Theme | "line" | (typeof audioTheme)["apple"]>,
+      default: "summer",
     },
     currentTime: {
       type: Number,
@@ -102,7 +107,7 @@ export default defineComponent({
       },
       analyserAudio: useAnalyserAudio(),
       curPlayStatus: useCurPlayStatus(),
-      curTheme: <Theme | "custom">(typeof ctx.theme === "string" ? ctx.theme : "custom"),
+      curTheme: <Theme | "line" | "custom">(typeof ctx.theme === "string" ? ctx.theme : "custom"),
     }
   },
   mounted() {
@@ -161,20 +166,24 @@ export default defineComponent({
     // 主题色
     canvasTheme(): (typeof audioTheme)["apple"] {
       return this.curTheme === "custom"
-        ? this.theme as Exclude<typeof this.theme, Theme>
-        : audioTheme[this.curTheme];
+        ? this.theme as Exclude<typeof this.theme, Theme | "line">
+        : audioTheme[this.curTheme] || audioTheme["apple"];
     }
   },
   methods: {
     changeTheme() {
       const allThemes = Object.keys(audioTheme) as Theme[];
       if(this.curTheme === "custom") {
+        this.curTheme = "line";
+      } else if(this.curTheme === "line") {
         this.curTheme = allThemes[0];
       } else {
         const idx = allThemes.indexOf(this.curTheme);
         const len = allThemes.length;
-        const toCustom = typeof this.theme !== "string" && idx >= len - 1;
-        this.curTheme = toCustom ? "custom" : allThemes[(idx + 1) % len];
+        const hasCustom = typeof this.theme !== "string";
+        this.curTheme = idx >= len - 1
+          ? hasCustom ? "custom" : "line"
+          : allThemes[(idx + 1) % len];
       }
     },
     fetchLrc(audio: Audio) {
@@ -237,26 +246,36 @@ export default defineComponent({
       const bufferLength = this.analyserAudio.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
 
-      const [WIDTH, HEIGHT] = [435, 250];
-      const getCanvas = (): CanvasRenderingContext2D | null => {
-        const canvas = this.$refs.audioCanvas as HTMLCanvasElement | null;
-        if(!canvas) {
-          return null;
-        }
-
-        [canvas.width, canvas.height] = [WIDTH, HEIGHT];
+      const sizeGetter = (refName: string): [number, number] => {
+        let container = this.$refs[refName] as HTMLDivElement;
+        if(!container) return [0, 0];
+        return [container.clientWidth, container.clientHeight];
+      }
+      const getCanvas = (refName: string, ctnRefName: string): CanvasRenderingContext2D | null => {
+        const canvas = this.$refs[refName] as HTMLCanvasElement | null;
+        if(!canvas) return null;
+        [canvas.width, canvas.height] = sizeGetter(ctnRefName);
         return canvas.getContext("2d");
       }
 
       const render = initRender(bufferLength);
       const renderFrame = () => {
         requestAnimationFrame(renderFrame);
-        const ctx = getCanvas();
-        if(!ctx) return;
-
+        let ctx: CanvasRenderingContext2D | null;
         // 将当前频率数据复制到传入的Uint8Array，更新频率数据
         this.analyserAudio?.getByteFrequencyData(dataArray);
-        render.bar(ctx, this.canvasTheme, [WIDTH, HEIGHT], dataArray);
+        if(ctx = getCanvas("audioCanvas", "container")) {
+          const sg = () => sizeGetter("container")
+          this.curTheme == "line"
+            ? render.line(ctx, this.canvasTheme, sg, dataArray)
+            : render.bar(ctx, this.canvasTheme, sg, dataArray);
+        }
+        if(ctx = getCanvas("bgCanvas", "bgCanvasContainer")) {
+          const sg = () => sizeGetter("bgCanvasContainer");
+          this.curTheme == "line"
+            ? render.line(ctx, this.canvasTheme, sg, dataArray)
+            : render.bar(ctx, this.canvasTheme, sg, dataArray);
+        }
       }
       renderFrame();
       this.isRendering = true;

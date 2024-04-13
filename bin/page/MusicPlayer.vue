@@ -1,9 +1,13 @@
 <template>
-  <div class="music-player">
+  <div id="music-player">
     <div class="loading" v-if="isLoading">
       <Loading />
     </div>
     <div class="left">
+      <div class="chapter" :class="{ 'playing': playStatus == 'playing' }">
+        <h1>{{ currentChapter.title }}</h1>
+        <div v-text="currentChapter.description ?? ''"/>
+      </div>
       <div class="board">
         <MusicBoard ref="musicBoardRef"
           :current-time="currentTime"
@@ -44,19 +48,23 @@
         <hr />
       </button>
       <div class="list">
-        <MusicList @change="playTo" />
+        <MusicList ref="musicListRef"
+          @change="playTo"
+          @chapter-change="chapter => currentChapter = chapter"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { unref, defineComponent } from "vue";
 import Loading from "./Loading.vue";
 import MusicBoard from "./MusicBoard.vue";
 import MusicPanel from "./MusicPanel.vue";
 import MusicList from "./MusicList.vue";
 import * as cp from "../composables";
+import type { Chapter } from "../..";
 // import { getSongDetail } from '../api';
 // import { mapState, mapMutations, mapActions } from "../store/helper/music";
 
@@ -68,7 +76,7 @@ export default defineComponent({
     MusicBoard,
     MusicPanel,
     MusicList,
-},
+  },
   data() {
     return {
       httpEnd: cp.useHttpEnd(),
@@ -84,6 +92,7 @@ export default defineComponent({
       isLoading: true,
       hidePanel: false,
       panelIsLyric: false,
+      currentChapter: <Chapter>{ title: "", audioList: [] },
     }
   },
   mounted() {
