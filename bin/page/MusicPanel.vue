@@ -115,10 +115,19 @@ export default defineComponent({
       this.fetchLrc(this.audio);
     }
   },
+  emits: {
+    changeLyric(lyric: string) {
+      return true;
+    }
+  },
   watch: {
     activeLyricIndex(newIndex, oldIndex) {
       if (newIndex !== oldIndex) {
         this.checkAndScroll();
+        const content = this.lyric[newIndex]?.content;
+        if(content) {
+          this.$emit("changeLyric", content);
+        }
       }
     },
     showLyric() {
