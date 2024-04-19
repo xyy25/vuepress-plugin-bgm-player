@@ -43,6 +43,8 @@ import type { Audio, Chapter, ChapterOption } from '../../index';
 import { useAudioList, useCurPlayStatus, useCurIndex, usePlayMode } from '../composables';
 import { computed, toRef, onMounted, watch, ref } from 'vue';
 import Playing from './Playing.vue';
+import { inject } from 'vue';
+import { BGM_CHAPTER_KEY } from '.';
 
 const props = defineProps<{
   chapterOptions?: ChapterOption[],
@@ -55,7 +57,13 @@ const emit = defineEmits<{
 
 declare const __CHAPTER_OPTIONS__: ChapterOption[];
 
-const options = toRef(props, "chapterOptions", __CHAPTER_OPTIONS__);
+const compOptions = toRef(props, "chapterOptions");
+const injectOptions = inject(BGM_CHAPTER_KEY);
+const options = computed<ChapterOption[]>(() => {
+  return compOptions.value
+    || injectOptions?.value
+    || __CHAPTER_OPTIONS__;
+});
 const audioList = useAudioList();
 const playStatus = useCurPlayStatus();
 const playMode = usePlayMode();
@@ -67,6 +75,11 @@ const chapters = computed(() => {
   const chapters: Chapter[] = [{
     title: '默认章节', audioList: []
   }];
+  if(!options.value.length) {
+    chapters[0].audioList = audioList.value
+      .map((a, index) => ({ ...a, index }));
+    return chapters;
+  }
   for(const option of options.value) {
     const audioMap: Record<string, AudioItem> =
       Object.fromEntries(audioList.value.map((a, index) => [
