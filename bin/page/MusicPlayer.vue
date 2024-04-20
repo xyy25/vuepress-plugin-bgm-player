@@ -6,7 +6,11 @@
     <div class="left">
       <div class="chapter" :class="{ 'playing': playStatus == 'playing' }">
         <h1 :data-text="'♪ ' + currentChapter.title + ' ♪'">♪ {{ currentChapter.title }} ♪</h1>
-        <div class="song-name" v-text="curAudio.name + ' - ' + curAudio.artist"/>
+        <div class="song-name auto-scroll">
+          <div class="item">
+            {{ curAudio.name + ' - ' + curAudio.artist }}
+          </div>
+        </div>
         <div v-text="currentChapter.description ?? ''"/>
       </div>
       <div class="board">
@@ -18,6 +22,7 @@
           @pause="pause"
           @jump="to => (currentTime = to, scrollLrc())"
           @change="to => ({ last: playLast, next: playNext }[to])()"
+          @toggle-bg-canvas="bgCanvasOn = !bgCanvasOn"
         />
       </div>
       <div class="slot">
@@ -37,6 +42,7 @@
           :show-lyric="panelIsLyric"
           :current-time="currentTime"
           :total-time="totalTime"
+          :bg-canvas-on="bgCanvasOn"
         />
       </div>
       <button class="panel-hidden-btn" @click="hidePanel = !hidePanel">
@@ -93,6 +99,7 @@ export default defineComponent({
       isLoading: true,
       hidePanel: false,
       panelIsLyric: false,
+      bgCanvasOn: true,
       currentChapter: <Chapter>{ title: "", audioList: [] },
     }
   },

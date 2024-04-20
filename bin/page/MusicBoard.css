@@ -80,8 +80,19 @@
 .btn {
   --color: #3c3c3c;
 }
-.dark .btn {
-  --color: #7c7c7c;
+
+.time {
+  --time-color: #5c5c5c;
+}
+
+.dark {
+  .btn {
+    --color: #acacac;
+  }
+
+  .time {
+    --time-color: #9c9c9c;
+  }
 }
 
 .progress-bar-wrap {
@@ -127,7 +138,7 @@
     right: 0;
     bottom: 8px;
     font-size: 12px;
-    color: #5c5c5c;
+    color: var(--time-color);
   }
 
   .progress-bar {

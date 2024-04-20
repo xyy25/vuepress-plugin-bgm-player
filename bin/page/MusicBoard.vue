@@ -17,6 +17,11 @@
           width="17" height="17" fill="currentColor" v-html="playModeIcon[playMode]">
         </svg>
       </div>
+      <div class="btn clickable" @click="emit('toggleBgCanvas')" title="背景特效开关">
+        <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"
+          width="17" height="17" fill="currentColor" v-html="toggleBgCanvasIcon">
+        </svg>
+      </div>
       <div class="btn clickable" title="音量">
         <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"
           width="17" height="17" fill="currentColor" v-html="volumeIcon"
@@ -111,6 +116,7 @@ const emit = defineEmits<{
   (event: "jump", to: number): void
   (event: "change", to: "last" | "next"): void
   (event: "changePanel"): void
+  (event: "toggleBgCanvas"): void
 }>();
 
 const { currentTime, totalTime } = toRefs(props);
@@ -139,6 +145,7 @@ const playModeText: Record<PlayMode, string> = {
   loop: "列表循环",
   random: "随机播放",
 }
+const toggleBgCanvasIcon = '<polygon points="5.5 23 2 30 9 30 5.5 23"/><path d="m26,15v2c1.1025,0,2,.8975,2,2v5c0,1.1025-.8975,2-2,2H10v2h16c2.2061,0,4-1.7939,4-4v-5c0-2.2056-1.7939-4-4-4Z"/><path d="m14,24c-.4463,0-.8389-.2959-.9614-.7251l-1.793-6.2749h-3.2456v-2h4c.4463,0,.8389.2959.9614.7251l1.0386,3.6348,3.0386-10.6348c.1226-.4292.5151-.7251.9614-.7251s.8389.2959.9614.7251l1.793,6.2749h3.2456v2h-4c-.4463,0-.8389-.2959-.9614-.7251l-1.0386-3.6348-3.0386,10.6348c-.1226.4292-.5151.7251-.9614.7251Z"/><path d="m4,13v-5c0-1.103.897-2,2-2h16v-2H6c-2.2056,0-4,1.7944-4,4v5c0,2.2056,1.7944,4,4,4v-2c-1.103,0-2-.897-2-2Z"/><circle cx="27" cy="5" r="3"/><g id="_Transparent_Rectangle_" data-name="&amp;lt;Transparent Rectangle&amp;gt;"><rect style="fill: none;" width="32" height="32"/></g>';
 
 const playing = computed(() => {
   return playStatus.value === "playing";
@@ -154,7 +161,7 @@ const volumeIcon = computed(() => {
   }
   return volume.value < .5
     ? '<path d="M25.1,10.66,23.58,12a6,6,0,0,1-.18,7.94l1.47,1.36a8,8,0,0,0,.23-10.59Z"/><path d="M20,30a1,1,0,0,1-.71-.3L11.67,22H5a1,1,0,0,1-1-1H4V11a1,1,0,0,1,1-1h6.67l7.62-7.7a1,1,0,0,1,1.41,0A1,1,0,0,1,21,3V29A1,1,0,0,1,20,30ZM6,20h6a1.17,1.17,0,0,1,.79.3L19,26.57V5.43L12.79,11.7A1.17,1.17,0,0,1,12,12H6Z"/>'
-    : '<path d="M27.16,8.08,25.63,9.37a10,10,0,0,1-.29,13.23L26.81,24a12,12,0,0,0,.35-15.88Z"/><path d="M21.58,12a6,6,0,0,1-.18,7.94l1.47,1.36a8,8,0,0,0,.23-10.59Z"/><path class="cls-1" d="M18,30a1,1,0,0,1-.71-.3L9.67,22H3a1,1,0,0,1-1-1H2V11a1,1,0,0,1,1-1H9.67l7.62-7.7a1,1,0,0,1,1.41,0A1,1,0,0,1,19,3V29A1,1,0,0,1,18,30ZM4,20h6.08a1,1,0,0,1,.71.3L17,26.57V5.43L10.79,11.7a1,1,0,0,1-.71.3H4Z"/>';
+    : '<path d="M27.16,8.08,25.63,9.37a10,10,0,0,1-.29,13.23L26.81,24a12,12,0,0,0,.35-15.88Z"/><path d="M21.58,12a6,6,0,0,1-.18,7.94l1.47,1.36a8,8,0,0,0,.23-10.59Z"/><path d="M18,30a1,1,0,0,1-.71-.3L9.67,22H3a1,1,0,0,1-1-1H2V11a1,1,0,0,1,1-1H9.67l7.62-7.7a1,1,0,0,1,1.41,0A1,1,0,0,1,19,3V29A1,1,0,0,1,18,30ZM4,20h6.08a1,1,0,0,1,.71.3L17,26.57V5.43L10.79,11.7a1,1,0,0,1-.71.3H4Z"/>';
 });
 
 function getSong() {

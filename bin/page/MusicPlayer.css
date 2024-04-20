@@ -56,9 +56,12 @@
   gap: 1em;
 
   @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
-    padding-top: 2rem;
+    margin: auto;
+    max-width: 800px;
+    height: 100%;
+    padding: 2rem 0 0;
     flex-direction: column;
-    overflow: auto;
+    overflow-y: auto;
     justify-content: start;
   }
 
@@ -81,22 +84,21 @@
     justify-content: center;
     height: 100%;
 
+    @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
+      justify-content: start;
+      width: 100%;
+    }
+
     .chapter {
       position: absolute;
       width: 100%;
-      top: 10%;
+      top: 5%;
       left: 0;
 
-      margin-bottom: 4rem;
-
       @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
+        margin-bottom: 4rem;
         position: relative;
-        width: unset;
         text-align: center;
-        /* h1::before {
-          content: '♪';
-          margin-right: .4em;
-        } */
       }
 
       &.playing h1 {
@@ -125,18 +127,20 @@
       h1 {
         font-family: 汉仪文黑;
         padding-top: 0;
-        margin-bottom: 0;
+        margin: 0;
         position: relative;
         width: 100%;
-
-        /* &::after {
-          content: '♪';
-          margin-left: .4em;
-        } */
       }
 
       .song-name {
         margin-bottom: .6rem;
+        /* overflow: auto;
+
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        &::-webkit-scrollbar {
+          display: none;
+        } */
       }
 
       div {
@@ -155,17 +159,19 @@
   }
 
   .right {
-    flex: 3;
+    flex: 3 0;
     flex-direction: column;
     height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
+    max-width: 60vw;
 
     @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
       height: auto;
       width: 100%;
+      max-width: 100%;
       margin-top: 2rem;
       padding-bottom: 5vw;
     }
@@ -183,7 +189,7 @@
         height: 0;
 
         ~ .list {
-          height: calc(100vh - 10em);
+          height: calc(100% - 10em);
         }
       }
 
@@ -223,7 +229,7 @@
         transition: height ease-in-out .2s;
 
         width: 100%;
-        height: calc(100vh - 10em - 250px);
+        height: calc(100% - 10em - 250px);
 
         @media (max-width: 800px), (max-height: 640px){
           margin-top: 1rem;

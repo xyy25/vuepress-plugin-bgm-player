@@ -1,0 +1,167 @@
+.dark .reco-bgm-panel
+  --box-shadow: 0 0 5px rgba(184, 221, 221, 0.4)
+  --default-color-7: rgba(77, 70, 97, 0.7)
+
+:not(.dark *) .reco-bgm-panel
+  --box-shadow: 0 0 5px rgba(7, 73, 73, 0.4)
+  --default-color-7: rgba(255, 255, 255, 0.7)
+
+.reco-bgm-panel
+  --accent-color rgb(104, 173, 173)
+  height 0
+  width 0
+  .reco-bgm-box
+    position fixed
+    display flex
+    height 80px
+    background-color var(--default-color-7)
+    border-radius 50px
+    padding 10px
+    box-shadow 0 1px 6px 0 rgba(0,0,0,0.2)
+    .reco-bgm-cover
+      background-size contain
+      z-index 3
+      float left
+      height 100%
+      width: 60px
+      border-radius 50%
+      box-shadow 0 0 10px 1px #616161
+      cursor pointer
+      .mini-operation
+        height 100%
+        border-radius 50%
+        width @width
+        display flex
+        background-color rgba(158, 158, 158, 0.3)
+        justify-content center
+        align-items center
+        i
+          color #fff
+          cursor pointer
+          font-size 20px
+      .fault-message
+        height 100%
+        border-radius 50%
+        letter-spacing .2em
+        line-height 1.4em
+        padding .4em
+        width @width
+        display flex
+        background-color rgba(158, 158, 158, 0.3)
+        text-align center
+        justify-content center
+        align-items center
+        color #ffffff
+    .reco-bgm-info
+      float left
+      z-index 2
+      height 100%
+      min-width 200px
+      padding 0 10px
+      display flex
+      flex-direction column
+      justify-content center
+
+      .info-box
+        height 21px
+        display flex
+        max-width 250px
+        align-items center
+        color rgb(29, 40, 44)
+        font-size 14px
+        i
+          color var(--accent-color)
+          font-size 18px
+        .music
+          font-size 16px
+      .reco-bgm-progress
+        height 14px
+        width 100%
+        display flex
+        align-items center
+        padding 2px 0
+        .progress-bar
+          height 5px
+          width 100%
+          background #757575
+          border-radius 5px
+          position relative
+          cursor pointer
+          .bar
+            position absolute
+            left 0
+            top 0
+            height 5px
+            width 0
+            background-color var(--accent-color)
+            border-radius 5px
+      .reco-bgm-operation
+        display flex
+        justify-content flex-start
+        align-items center
+        height 24px
+        i
+          margin-right 5px
+          color var(--accent-color)
+          cursor pointer
+        .last
+          font-size 10px
+        .next
+          font-size 10px
+        .pause
+          font-size 15px
+        .play
+          font-size 15px
+        .volume
+          font-size 18px
+        .mute
+          font-size 18px
+          &:hover
+            font-size 20px
+        .volume-bar
+          height 5px
+          width 57px
+          background #757575
+          border-radius 5px
+          position relative
+          cursor pointer
+          .bar
+            position absolute
+            left 0
+            top 0
+            height 5px
+            width 0
+            background-color var(--accent-color)
+            border-radius 5px
+    .reco-bgm-left-box
+      float left
+      height 100%
+      font-size 22px
+      display flex
+      flex-direction column
+      justify-content center
+      cursor pointer
+      i
+        color var(--accent-color)
+  .reco-float-box
+    width 50px
+    height 50px
+    background-color var(--default-color-7)
+    position fixed
+    bottom 2em
+    display flex
+    justify-content center
+    align-items center
+    cursor pointer
+    box-shadow var(--box-shadow)
+    img
+      width 45px
+      height 45px
+      border-radius 50%
+      pointer-events none
+  .reco-float-box:hover
+    box-shadow 0 0 5px rgb(7, 73, 73)
+
+.dark
+  .reco-float-box:hover
+    box-shadow 0 0 5px rgb(183, 219, 219)

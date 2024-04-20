@@ -3,6 +3,8 @@
   margin: auto;
   width: 95%;
   height: 100%;
+  display: flex;
+  justify-content: center;
 
   canvas {
     @media (max-width: 800px), (max-width: 800px) or (max-height: 640px) {
@@ -10,18 +12,12 @@
     }
   }
 
-  > div {
-    position: absolute;
-    top: calc(50% - .5em);
-    width: 100%;
-    height: 100%;
-    text-align: center;
-    font-family: 有爱圆体, sans-serif;
-  }
-
   .lyric {
+    position: absolute;
     top: 0;
     pointer-events: none;
+    height: 100%;
+    text-align: center;
 
     .lyric-wrap {
       width: 100%;
@@ -41,13 +37,19 @@
     hsla(0, 0%, 100%, 0)
   );
 
+  p {
+    margin: 1.5em 0;
+    line-height: 1em;
+    font-family: 有爱圆体, sans-serif;
+  }
+
   .lyric-item {
     filter: blur(1px);
     font-size: 14px;
 
     &.active {
       filter: none;
-      margin-bottom: 16px;
+      margin: .5em 0;
       font-size: 18px;
       font-weight: bold
     }
@@ -60,7 +62,7 @@
 
 .lyric-container {
   height: 60vh;
-  width: 350px;
+  max-width: 90%;
   margin: auto;
 }
 
@@ -113,10 +115,10 @@
 .bg-canvas {
   filter: blur(1px);
   opacity: 0.5;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   z-index: -100;
-  height: 100vh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
 }

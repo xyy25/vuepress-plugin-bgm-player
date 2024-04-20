@@ -37,7 +37,7 @@
       </div>
     </Scroller>
   </div>
-  <teleport to="#app">
+  <teleport v-if="bgCanvasOn" to="#app">
     <div ref="bgCanvasContainer" class="bg-canvas">
       <canvas ref="bgCanvas" :class="{ paused: curPlayStatus === 'paused' }"/>
     </div>
@@ -90,6 +90,10 @@ export default defineComponent({
       type: Number,
       default: 0,
     },
+    bgCanvasOn: {
+      type: Boolean,
+      default: false,
+    }
   },
   data(ctx) {
     return {
@@ -253,17 +257,19 @@ export default defineComponent({
 
       // 获取频率数组
       const bufferLength = this.analyserAudio.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
+      const frequencyArray = new Uint8Array(bufferLength);
+      const timeDomainArray = new Uint8Array(bufferLength);
 
       const sizeGetter = (refName: string): [number, number] => {
         let container = this.$refs[refName] as HTMLDivElement;
         if(!container) return [0, 0];
         return [container.clientWidth, container.clientHeight];
       }
-      const getCanvas = (refName: string, ctnRefName: string): CanvasRenderingContext2D | null => {
+      const getCanvas = (refName: string, ctnRefName: string | [number, number]): CanvasRenderingContext2D | null => {
         const canvas = this.$refs[refName] as HTMLCanvasElement | null;
         if(!canvas) return null;
-        [canvas.width, canvas.height] = sizeGetter(ctnRefName);
+        [canvas.width, canvas.height] = typeof ctnRefName == "string" ?
+          sizeGetter(ctnRefName) : ctnRefName;
         return canvas.getContext("2d");
       }
 
@@ -272,18 +278,19 @@ export default defineComponent({
         requestAnimationFrame(renderFrame);
         let ctx: CanvasRenderingContext2D | null;
         // 将当前频率数据复制到传入的Uint8Array，更新频率数据
-        this.analyserAudio?.getByteFrequencyData(dataArray);
+        this.analyserAudio?.getByteFrequencyData(frequencyArray);
+        this.analyserAudio?.getByteTimeDomainData(timeDomainArray);
+        const ren = render[this.curTheme == "line" ? "line" : "bar"](
+          frequencyArray, timeDomainArray
+        );
         if(ctx = getCanvas("audioCanvas", "container")) {
-          const sg = () => sizeGetter("container")
-          this.curTheme == "line"
-            ? render.line(ctx, this.canvasTheme, sg, dataArray)
-            : render.bar(ctx, this.canvasTheme, sg, dataArray);
+          const sg = () => sizeGetter("container");
+          console.log(sizeGetter("container"))
+          ren(ctx, this.canvasTheme, sg);
         }
         if(ctx = getCanvas("bgCanvas", "bgCanvasContainer")) {
           const sg = () => sizeGetter("bgCanvasContainer");
-          this.curTheme == "line"
-            ? render.line(ctx, this.canvasTheme, sg, dataArray)
-            : render.bar(ctx, this.canvasTheme, sg, dataArray);
+          ren(ctx, this.canvasTheme, sg);
         }
       }
       renderFrame();

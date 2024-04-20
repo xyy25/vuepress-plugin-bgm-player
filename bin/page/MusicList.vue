@@ -30,8 +30,12 @@
             </svg>
           </span>
           <span class="index">{{ audio.index + 1 }}</span>
-          <span class="name">{{ audio.name }}</span>
-          <span class="artist">{{ audio.artist }}</span>
+          <span class="name auto-scroll">
+            <div class="item" v-text="audio.name"/>
+          </span>
+          <span class="artist">
+            <div v-text="audio.artist"/>
+          </span>
         </div>
       </div>
     </div>

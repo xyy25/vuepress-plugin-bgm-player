@@ -29,12 +29,16 @@
           <!-- 歌曲名 -->
           <div class="info-box">
             <i class="reco-bgm reco-bgm-music music"></i>
-            {{ curAudio.name }}
+            <div class="auto-scroll">
+              <div class="item">{{ curAudio.name }}</div>
+            </div>
           </div>
           <!-- 艺术家名 -->
           <div class="info-box">
             <i class="reco-bgm reco-bgm-artist"></i>
-            {{ curAudio.artist }}
+            <div class="auto-scroll">
+              <div class="item">{{ curAudio.artist }}</div>
+            </div>
           </div>
           <!-- 歌曲进度条 -->
           <div class="reco-bgm-progress">
@@ -295,9 +299,13 @@ export default {
 }
 </script>
 
+<style lang="stylus">
+@import './styles/index.styl'
+</style>
+
 <style lang="stylus" scoped>
 @require './assets/iconfont/iconfont.css'
-@import './styles/index.styl'
+@import './styles/bgMusic.styl'
 
 .rotate
   animation rotation 20s infinite linear
